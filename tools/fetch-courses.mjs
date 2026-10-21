@@ -74,6 +74,7 @@ for (const el of courses) {
   const mapped = holes.filter(h => h.center && inBounds(h.center, b)).length;
   const name = el.tags?.name;
   if (!name && mapped === 0) continue; // an unnamed outline with nothing in it helps nobody
+  if (el.tags?.sport === 'disc_golf' || /disc ?golf/i.test(name || '')) continue;
   const entry = {
     osm: `${el.type}/${el.id}`,
     name: name || 'Unnamed golf course',

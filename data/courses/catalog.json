@@ -30,16 +30,6 @@
     "file": "osm-relation-6677178.json"
   },
   {
-    "osm": "relation/3949162",
-    "name": "Branchwood Disc Golf Course",
-    "center": [
-      36.48992,
-      -94.34973
-    ],
-    "holes": 0,
-    "file": null
-  },
-  {
     "osm": "relation/9382373",
     "name": "Brittany",
     "center": [

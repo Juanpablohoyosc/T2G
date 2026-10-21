@@ -14,11 +14,27 @@ A catalog of every golf course OpenStreetMap has in Northwest Arkansas ships wit
 
 To refresh the catalog, open the **Actions** tab, choose **Fetch course data from OpenStreetMap** and click **Run workflow**. A course that fails to load keeps its previous file.
 
-| Course | On OpenStreetMap (Oct 2026) |
-| --- | --- |
-| Blessings Golf Club, Johnson | 18 holes, par 72, every green outlined |
-| Lakeside Village Golf Course, Fayetteville | 9 holes, all par 3, every green outlined |
-| The Links at Fayetteville | Not mapped, so it has to be added with the course builder |
+In October 2026 the catalog has 17 courses in Northwest Arkansas. Fifteen have every hole mapped:
+
+| Course | Holes | Par on OpenStreetMap |
+| --- | --- | --- |
+| Bella Vista Country Club | 18 | not mapped |
+| Big Sugar Golf Club | 18 | yes (72) |
+| Blessings Golf Club | 18 | yes (72) |
+| Brittany | 9 | not mapped |
+| Brush Creek Golf Course | 9 | not mapped |
+| Dogwood Golf Course | 18 | not mapped |
+| Fayetteville Country Club | 18 | yes (70) |
+| Highlands Golf Course | 18 | yes (72) |
+| Kingswood Berksdale Golf Course | 18 | not mapped |
+| Lakeside Village Golf Course | 9 | yes (27) |
+| Lost Springs Golf & Athletic Club | 18 | yes (72) |
+| Paradise Valley Golf and Athletic Club | 18 | yes (71) |
+| Scotsdale Golf Course | 18 | not mapped |
+| The Creeks | 18 | yes (71) |
+| The Greens on Blossom Way | 9 | not mapped |
+
+The Links at Bentonville and The Links at Rainbow Curve are on OpenStreetMap without holes. The Links at Fayetteville isn't on it at all.
 
 Other courses are loaded from [OpenStreetMap](https://www.openstreetmap.org/copyright) through the free Overpass API, then saved on the phone. Holes (`golf=hole`) and greens (`golf=green`) are volunteer-mapped, so a course is only as complete as its mapping. T2G never makes up coordinates. Course data © OpenStreetMap contributors, available under the ODbL.
 
