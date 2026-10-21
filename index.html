@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0c0b">
+  <meta name="description" content="T2G (Tee to Green): a free golf GPS rangefinder that runs in your phone's browser.">
+  <title>T2G · Tee to Green</title>
+  <link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <button class="course-btn" id="course-btn" type="button" aria-haspopup="dialog">
+        <span class="brand">T2G</span>
+        <span class="course-name" id="course-name">Choose a course</span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <button class="icon-btn" id="theme-btn" type="button" aria-label="Switch to sun mode">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      </button>
+      <button class="icon-btn" id="settings-btn" type="button" aria-label="Settings" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
+      </button>
+    </header>
+
+    <div class="demo-banner" id="demo-banner" role="status" hidden>
+      <strong>Demo mode</strong> · simulated position, not real GPS
+    </div>
+
+    <main class="gps-view" id="gps-view">
+      <section class="empty" id="empty-state" hidden>
+        <p class="empty-kicker">Tee to Green</p>
+        <h1>Pick a course to start</h1>
+        <p>Load a real course from OpenStreetMap. It's saved on this phone, so it keeps working when the signal drops.</p>
+        <button class="btn primary" id="empty-course-btn" type="button">Choose a course</button>
+      </section>
+
+      <section class="hole" id="hole-view" hidden>
+        <div class="hole-bar">
+          <button class="hole-nav" id="prev-hole" type="button" aria-label="Previous hole">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <div class="hole-id" aria-live="polite">
+            <span class="hole-label">Hole</span>
+            <span class="hole-num" id="hole-num">1</span>
+            <span class="hole-meta"><span id="hole-par">Par 4</span><span class="hole-of" id="hole-of">of 18</span></span>
+          </div>
+          <button class="hole-nav" id="next-hole" type="button" aria-label="Next hole">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <div class="dists" id="dists">
+          <div class="dist back">
+            <span class="label">Back</span>
+            <span class="val" id="d-back">—</span>
+          </div>
+          <div class="dist center">
+            <span class="label">Center</span>
+            <span class="val" id="d-center">—</span>
+            <span class="unit" id="d-unit">yd</span>
+          </div>
+          <div class="dist front">
+            <span class="label">Front</span>
+            <span class="val" id="d-front">—</span>
+          </div>
+          <p class="dist-note" id="dist-note" hidden></p>
+        </div>
+
+        <div class="demo-panel" id="demo-panel" hidden>
+          <div class="demo-row">
+            <label for="demo-slider">Move the simulated player</label>
+            <output id="demo-out" for="demo-slider"></output>
+          </div>
+          <input type="range" id="demo-slider" min="0" max="1000" step="1" value="0">
+          <div class="chips" id="demo-chips">
+            <button type="button" data-to="tee">Tee</button>
+            <button type="button" data-to="150">150 out</button>
+            <button type="button" data-to="100">100 out</button>
+            <button type="button" data-to="50">50 out</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="statusbar">
+      <button class="gps-status" id="gps-status" type="button">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="gps-text">GPS</span>
+      </button>
+      <span class="data-source" id="data-source"></span>
+    </footer>
+  </div>
+
+  <dialog class="sheet" id="course-sheet" aria-labelledby="course-sheet-title">
+    <div class="sheet-head">
+      <h2 id="course-sheet-title">Courses</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <section>
+        <h3>On this phone</h3>
+        <ul class="list" id="saved-list"></ul>
+        <p class="muted" id="saved-empty">No courses yet. Load one below.</p>
+      </section>
+      <section>
+        <h3>Load from OpenStreetMap</h3>
+        <ul class="list" id="preset-list"></ul>
+        <button class="btn secondary wide" id="near-btn" type="button">Find golf courses near me</button>
+        <ul class="list" id="near-list"></ul>
+        <p class="msg" id="load-msg" role="status"></p>
+        <p class="fine">Holes and greens come from volunteer mapping on OpenStreetMap, not from the clubs. Check a couple of yardage markers before you trust a new course.</p>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog class="sheet" id="settings-sheet" aria-labelledby="settings-sheet-title">
+    <div class="sheet-head">
+      <h2 id="settings-sheet-title">Settings</h2>
+      <button class="icon-btn" type="button" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div class="setting">
+        <span class="setting-name" id="units-label">Units</span>
+        <div class="segmented" role="group" aria-labelledby="units-label">
+          <button type="button" data-units="yd">Yards</button>
+          <button type="button" data-units="m">Meters</button>
+        </div>
+      </div>
+      <div class="setting">
+        <span class="setting-name" id="theme-label">Display</span>
+        <div class="segmented" role="group" aria-labelledby="theme-label">
+          <button type="button" data-theme-choice="dark">Dark</button>
+          <button type="button" data-theme-choice="sun">Sun</button>
+        </div>
+      </div>
+      <label class="setting switch-row">
+        <span>
+          <span class="setting-name">Demo mode</span>
+          <span class="setting-help">Turns GPS off and uses a simulated player you move yourself. For presenting indoors.</span>
+        </span>
+        <input type="checkbox" class="switch" id="demo-toggle">
+      </label>
+      <label class="setting switch-row">
+        <span>
+          <span class="setting-name">Keep screen awake</span>
+          <span class="setting-help" id="wake-help">Stops the screen turning off mid-hole.</span>
+        </span>
+        <input type="checkbox" class="switch" id="wake-toggle">
+      </label>
+      <p class="fine">T2G has no login, no ads and no tracking. Everything stays on this phone.</p>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+</body>
+</html>
