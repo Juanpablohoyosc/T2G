@@ -1,5 +1,5 @@
 // Course picker sheet: saved courses, the Fayetteville presets and
-// "near me" search, all loaded from OpenStreetMap.
+// "near me", from the bundled OpenStreetMap catalog (or a live search).
 
 import { state, setState, forgetCachedCourse } from '../state.js';
 import { listCourses, saveCourse, deleteCourse } from '../courses.js';
@@ -108,53 +108,84 @@ async function run(task) {
   }
 }
 
-// Preset courses ship with the app as files in data/courses/ (fetched from
-// OpenStreetMap ahead of time), so they open instantly even when the free
-// OpenStreetMap servers are down. Returns null when there's no bundled copy.
-async function bundledCourse(preset) {
+// The catalog ships with the app (data/courses/catalog.json, built ahead of
+// time from OpenStreetMap by a GitHub Action): every course mapped in the
+// region, plus full hole data for the ones that have holes. Reading it is
+// instant and doesn't depend on OpenStreetMap's busy public servers.
+let catalog = null;
+
+async function loadCatalog() {
+  if (catalog) return catalog;
   try {
-    const index = await (await fetch('data/courses/index.json', { cache: 'no-cache' })).json();
-    const entry = index.find(e => e.preset === preset.name);
-    if (!entry) return null;
-    const course = await (await fetch(`data/courses/${entry.file}`, { cache: 'no-cache' })).json();
-    return Array.isArray(course.holes) && course.holes.length ? course : null;
+    const res = await fetch('data/courses/catalog.json', { cache: 'no-cache' });
+    const list = await res.json();
+    if (Array.isArray(list)) catalog = list;
   } catch {
-    return null;
+    // offline before the catalog was ever cached: fall back to a live search
   }
+  return catalog || [];
+}
+
+async function openCatalogCourse(entry) {
+  if (!entry.file) {
+    setMsg(`${entry.name} is on OpenStreetMap, but its holes aren’t mapped yet, so there’s nothing to measure. You’ll be able to add it with the course builder.`, { error: true });
+    return;
+  }
+  setMsg(`Opening ${entry.name}…`, { waiting: true });
+  const res = await fetch(`data/courses/${entry.file}`, { cache: 'no-cache' });
+  if (!res.ok) throw new Error(`Couldn’t open ${entry.name}. Check your connection and try again.`);
+  play(await res.json());
 }
 
 async function loadPreset(preset) {
-  setMsg(`Opening ${preset.label}…`, { waiting: true });
-  const bundled = await bundledCourse(preset);
-  if (bundled) {
-    play(bundled);
+  const wanted = preset.name.toLowerCase();
+  const entry = (await loadCatalog()).find(e => e.file && e.name.toLowerCase().includes(wanted));
+  if (entry) {
+    await openCatalogCourse(entry);
     return;
   }
-  setMsg(`Searching OpenStreetMap for ${preset.label}…`, { waiting: true });
+  setMsg(`Searching OpenStreetMap for ${preset.label}. The free servers can take a minute…`, { waiting: true });
   const found = await findCoursesByName(preset.name);
   if (found.length === 0) {
     setMsg(`${preset.label} isn’t on OpenStreetMap as a golf course yet.`, { error: true });
     return;
   }
-  const wanted = preset.name.toLowerCase();
   const best = found.find(c => c.name.toLowerCase().includes(wanted)) || found[0];
   await loadAndSave(best);
 }
 
+const NEARBY_METERS = 80000; // about 50 miles
+
 async function searchNearMe() {
   setMsg('Getting your location…', { waiting: true });
   const point = loc.snapshot().position?.point || await currentPoint();
-  setMsg('Searching OpenStreetMap for nearby courses…', { waiting: true });
+  const milesTo = c => haversine(point, c.center) / 1609.344;
+
+  const nearby = (await loadCatalog())
+    .filter(c => haversine(point, c.center) <= NEARBY_METERS)
+    .sort((a, b) => milesTo(a) - milesTo(b))
+    .slice(0, 15);
+
+  if (nearby.length) {
+    setMsg('');
+    $('near-list').replaceChildren(...nearby.map(c => row(
+      c.name,
+      `${milesTo(c).toFixed(1)} mi · ${c.file ? `${c.holes} holes` : 'holes not mapped yet'}`,
+      () => run(() => openCatalogCourse(c)),
+    )));
+    return;
+  }
+
+  // Outside the region T2G ships with: ask OpenStreetMap directly.
+  setMsg('No saved courses near you, so searching OpenStreetMap live. The free servers can take a minute…', { waiting: true });
   const found = (await findCoursesNear(point)).slice(0, 12);
   if (found.length === 0) {
     setMsg('No golf courses mapped within 25 km.', { error: true });
     return;
   }
   setMsg('');
-  $('near-list').replaceChildren(...found.map(c => {
-    const miles = haversine(point, c.center) / 1609.344;
-    return row(c.name, `${miles.toFixed(1)} mi away`, () => run(() => loadAndSave(c)));
-  }));
+  $('near-list').replaceChildren(...found.map(c =>
+    row(c.name, `${milesTo(c).toFixed(1)} mi away`, () => run(() => loadAndSave(c)))));
 }
 
 function currentPoint() {

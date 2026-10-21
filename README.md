@@ -10,7 +10,9 @@ A free, mobile-first golf GPS rangefinder that runs in the phone's browser. It's
 
 ## Course data
 
-The preset courses ship with the app in `data/courses/`, so they open instantly and don't depend on OpenStreetMap's public servers, which are often slow or down. To refresh them, open the **Actions** tab, choose **Fetch course data from OpenStreetMap** and click **Run workflow**. It saves the latest mapping and keeps the old file if a server fails.
+A catalog of every golf course OpenStreetMap has in Northwest Arkansas ships with the app in `data/courses/`. Courses that have holes mapped are included in full. The presets and **Find golf courses near me** read this catalog, so they open instantly and don't depend on OpenStreetMap's public servers, which are often slow or down. Outside the region, "near me" falls back to a live OpenStreetMap search.
+
+To refresh the catalog, open the **Actions** tab, choose **Fetch course data from OpenStreetMap** and click **Run workflow**. A course that fails to load keeps its previous file.
 
 | Course | On OpenStreetMap (Oct 2026) |
 | --- | --- |

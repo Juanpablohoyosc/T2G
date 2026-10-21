@@ -1,0 +1,22 @@
+[
+  {
+    "osm": "relation/6677178",
+    "name": "Blessings Golf Club",
+    "center": [
+      36.13281,
+      -94.19164
+    ],
+    "holes": 18,
+    "file": "osm-relation-6677178.json"
+  },
+  {
+    "osm": "way/860284480",
+    "name": "Lakeside Village Golf Course",
+    "center": [
+      36.10098,
+      -94.15931
+    ],
+    "holes": 9,
+    "file": "osm-way-860284480.json"
+  }
+]
