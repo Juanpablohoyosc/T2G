@@ -6,13 +6,21 @@
 
 import { centroid, pointInRing, haversine, lineThroughRing } from './geo.js';
 
+// Public Overpass servers. They're free and often busy, so T2G asks them in
+// turn, a few seconds apart, and takes the first good answer.
 const ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
   'https://overpass.private.coffee/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
 ];
 
 export const ATTRIBUTION = 'Course data © OpenStreetMap contributors (ODbL)';
+
+// A course search is small and should be quick; loading every hole, green and
+// hazard of a course is heavier, so give each server longer before asking the next.
+const QUICK = { deadlineMs: 30000, staggerMs: 5000 };
+const HEAVY = { deadlineMs: 75000, staggerMs: 15000 };
 
 // Northwest Arkansas: Fayetteville, Johnson, Springdale, Rogers, Bentonville.
 const NWA_BBOX = '35.95,-94.45,36.45,-93.95';
@@ -23,24 +31,54 @@ export const PRESETS = [
   { label: 'Blessings Golf Club', place: 'Johnson, AR', name: 'Blessings' },
 ];
 
-async function overpass(query) {
-  for (const url of ENDPOINTS) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 45000);
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        body: new URLSearchParams({ data: query }),
-        signal: ctrl.signal,
-      });
-      if (res.ok) return await res.json();
-    } catch {
-      // busy, rate-limited or offline: try the next mirror
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-  throw new Error('Couldn’t reach OpenStreetMap. Check your connection and try again.');
+function overpass(query, { deadlineMs, staggerMs }) {
+  return new Promise((resolve, reject) => {
+    const controllers = [];
+    const timers = [];
+    const failures = [];
+    let started = 0;
+    let settled = false;
+
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      timers.forEach(clearTimeout);
+      controllers.forEach(c => c.abort());
+      fn(value);
+    };
+    const giveUp = () => finish(reject, new Error(
+      'OpenStreetMap’s free servers are busy or out of reach right now. Try again in a minute.' +
+      (failures.length ? ` (${failures.join(', ')})` : ''),
+    ));
+
+    const askNext = () => {
+      if (settled || started >= ENDPOINTS.length) return;
+      const url = ENDPOINTS[started++];
+      const host = new URL(url).hostname;
+      const ctrl = new AbortController();
+      controllers.push(ctrl);
+      fetch(url, { method: 'POST', body: new URLSearchParams({ data: query }), signal: ctrl.signal })
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then(json => {
+          // Overpass reports its own timeouts inside a 200 response.
+          if (/error/i.test(json.remark || '')) throw new Error('server timeout');
+          finish(resolve, json);
+        })
+        .catch(err => {
+          if (settled) return;
+          failures.push(`${host}: ${err.message || 'no answer'}`);
+          if (started < ENDPOINTS.length) askNext(); // a fast failure moves straight on
+          else if (failures.length === ENDPOINTS.length) giveUp();
+        });
+      timers.push(setTimeout(askNext, staggerMs));
+    };
+
+    timers.push(setTimeout(giveUp, deadlineMs));
+    askNext();
+  });
 }
 
 const round = n => Math.round(n * 1e6) / 1e6;
@@ -64,12 +102,12 @@ function courseQuery(filter) {
 
 export async function findCoursesByName(name) {
   const safe = name.replace(/[^\p{L}\p{N} '&-]/gu, '');
-  const data = await overpass(courseQuery(`["name"~"${safe}",i](${NWA_BBOX})`));
+  const data = await overpass(courseQuery(`["name"~"${safe}",i](${NWA_BBOX})`), QUICK);
   return data.elements.map(toSummary);
 }
 
 export async function findCoursesNear(point, radiusMeters = 25000) {
-  const data = await overpass(courseQuery(`(around:${radiusMeters},${point[0]},${point[1]})`));
+  const data = await overpass(courseQuery(`(around:${radiusMeters},${point[0]},${point[1]})`), QUICK);
   return data.elements
     .map(toSummary)
     .filter(c => c.center)
@@ -120,6 +158,7 @@ export async function loadCourse(summary) {
     `[out:json][timeout:60];${summary.type}(${summary.id});out geom;` +
     `(way["golf"](${bbox});relation["golf"](${bbox});` +
     `way["natural"="water"](${bbox});relation["natural"="water"](${bbox}););out geom;`,
+    HEAVY,
   );
 
   const els = data.elements;

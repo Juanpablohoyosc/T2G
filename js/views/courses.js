@@ -72,10 +72,21 @@ function renderSaved() {
   }));
 }
 
-function setMsg(text, isError = false) {
+let ticker = null;
+
+// Status line under the course list. Waiting messages count the seconds after
+// a moment, so a slow server never looks like a frozen app.
+function setMsg(text, { error = false, waiting = false } = {}) {
+  clearInterval(ticker);
   const m = $('load-msg');
   m.textContent = text;
-  m.classList.toggle('error', isError);
+  m.classList.toggle('error', error);
+  if (!waiting) return;
+  const started = Date.now();
+  ticker = setInterval(() => {
+    const s = Math.round((Date.now() - started) / 1000);
+    if (s >= 4) m.textContent = `${text} ${s} s`;
+  }, 1000);
 }
 
 // One OpenStreetMap request at a time; buttons are disabled while it runs.
@@ -87,7 +98,7 @@ async function run(task) {
   try {
     await task();
   } catch (e) {
-    setMsg(e.message || 'Something went wrong. Try again.', true);
+    setMsg(e.message || 'Something went wrong. Try again.', { error: true });
   } finally {
     busy = false;
     buttons.forEach(b => { b.disabled = false; });
@@ -95,10 +106,10 @@ async function run(task) {
 }
 
 async function loadPreset(preset) {
-  setMsg(`Searching OpenStreetMap for ${preset.label}…`);
+  setMsg(`Searching OpenStreetMap for ${preset.label}…`, { waiting: true });
   const found = await findCoursesByName(preset.name);
   if (found.length === 0) {
-    setMsg(`${preset.label} isn’t on OpenStreetMap as a golf course yet.`, true);
+    setMsg(`${preset.label} isn’t on OpenStreetMap as a golf course yet.`, { error: true });
     return;
   }
   const wanted = preset.name.toLowerCase();
@@ -107,12 +118,12 @@ async function loadPreset(preset) {
 }
 
 async function searchNearMe() {
-  setMsg('Getting your location…');
+  setMsg('Getting your location…', { waiting: true });
   const point = loc.snapshot().position?.point || await currentPoint();
-  setMsg('Searching OpenStreetMap for nearby courses…');
+  setMsg('Searching OpenStreetMap for nearby courses…', { waiting: true });
   const found = (await findCoursesNear(point)).slice(0, 12);
   if (found.length === 0) {
-    setMsg('No golf courses mapped within 25 km.', true);
+    setMsg('No golf courses mapped within 25 km.', { error: true });
     return;
   }
   setMsg('');
@@ -137,7 +148,7 @@ function currentPoint() {
 }
 
 async function loadAndSave(summary) {
-  setMsg(`Loading holes for ${summary.name}…`);
+  setMsg(`Loading holes for ${summary.name}…`, { waiting: true });
   const { course, report } = await loadCourse(summary);
   if (!saveCourse(course)) {
     throw new Error('This phone’s storage for T2G is full. Delete a course and try again.');
