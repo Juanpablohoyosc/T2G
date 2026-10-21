@@ -4,7 +4,7 @@
 // which has the open internet access this needs. Also prints what
 // OpenStreetMap actually has for each course, to show what's missing.
 
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { PRESETS, findCoursesByName, loadCourse } from '../js/osm.js';
 
 // Overpass asks scripts to identify themselves.
@@ -75,12 +75,19 @@ for (const url of SERVERS) {
   }
 }
 
+// A preset that fails this time keeps the file from the last good run.
+let previous = [];
+try { previous = JSON.parse(await readFile(new URL('index.json', outDir), 'utf8')); } catch { /* first run */ }
 const index = [];
 for (const preset of PRESETS) {
+  const keepOld = () => {
+    const old = previous.find(e => e.preset === preset.name);
+    if (old) { index.push(old); console.log(`  keeping the saved copy (${old.file})`); }
+  };
   console.log(`\n=== ${preset.label}`);
   try {
     const found = await findCoursesByName(preset.name);
-    if (!found.length) { console.log('  not found by name'); continue; }
+    if (!found.length) { console.log('  not found by name'); keepOld(); continue; }
     const wanted = preset.name.toLowerCase();
     const summary = found.find(c => c.name.toLowerCase().includes(wanted)) || found[0];
     console.log(`  matched: ${summary.name} [${summary.type}/${summary.id}]`);
@@ -99,6 +106,7 @@ for (const preset of PRESETS) {
     index.push({ preset: preset.name, file, name: course.name, holes: course.holes.length });
   } catch (e) {
     console.log(`  ERROR: ${e.message}`);
+    keepOld();
   }
 }
 
