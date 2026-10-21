@@ -10,7 +10,15 @@ A free, mobile-first golf GPS rangefinder that runs in the phone's browser. It's
 
 ## Course data
 
-Courses are loaded from [OpenStreetMap](https://www.openstreetmap.org/copyright) through the free Overpass API, then saved on the phone. Holes (`golf=hole`) and greens (`golf=green`) are volunteer-mapped, so a course is only as complete as its mapping. T2G never makes up coordinates. Course data © OpenStreetMap contributors, available under the ODbL.
+The preset courses ship with the app in `data/courses/`, so they open instantly and don't depend on OpenStreetMap's public servers, which are often slow or down. To refresh them, open the **Actions** tab, choose **Fetch course data from OpenStreetMap** and click **Run workflow**. It saves the latest mapping and keeps the old file if a server fails.
+
+| Course | On OpenStreetMap (Oct 2026) |
+| --- | --- |
+| Blessings Golf Club, Johnson | 18 holes, par 72, every green outlined |
+| Lakeside Village Golf Course, Fayetteville | 9 holes, all par 3, every green outlined |
+| The Links at Fayetteville | Not mapped, so it has to be added with the course builder |
+
+Other courses are loaded from [OpenStreetMap](https://www.openstreetmap.org/copyright) through the free Overpass API, then saved on the phone. Holes (`golf=hole`) and greens (`golf=green`) are volunteer-mapped, so a course is only as complete as its mapping. T2G never makes up coordinates. Course data © OpenStreetMap contributors, available under the ODbL.
 
 ## Run it locally
 

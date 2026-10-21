@@ -44,7 +44,12 @@ const outDir = new URL('../data/courses/', import.meta.url);
 await mkdir(outDir, { recursive: true });
 
 console.log('Golf courses mapped in Northwest Arkansas:');
-const all = await rawOverpass('[out:json][timeout:25];(way["leisure"="golf_course"](35.95,-94.45,36.45,-93.95);relation["leisure"="golf_course"](35.95,-94.45,36.45,-93.95););out tags bb;');
+let all = { elements: [] };
+try {
+  all = await rawOverpass('[out:json][timeout:25];(way["leisure"="golf_course"](35.95,-94.45,36.45,-93.95);relation["leisure"="golf_course"](35.95,-94.45,36.45,-93.95););out tags bb;');
+} catch (e) {
+  console.log(`  couldn't list courses (${e.message})`);
+}
 for (const el of all.elements) {
   const b = el.bounds;
   const center = b ? `${((b.minlat + b.maxlat) / 2).toFixed(5)}, ${((b.minlon + b.maxlon) / 2).toFixed(5)}` : '?';
@@ -52,12 +57,16 @@ for (const el of all.elements) {
 }
 
 // Unnamed courses: how many holes, total par and the address tags, to tell them apart.
-for (const el of all.elements.filter(e => !e.tags?.name || /Rainbow/.test(e.tags.name))) {
+for (const el of all.elements.filter(e => !e.tags?.name)) {
   const b = el.bounds;
   const box = `${b.minlat},${b.minlon},${b.maxlat},${b.maxlon}`;
-  const holes = await rawOverpass(`[out:json][timeout:25];way["golf"="hole"](${box});out tags;`);
-  const par = holes.elements.reduce((sum, h) => sum + (parseInt(h.tags.par, 10) || 0), 0);
-  console.log(`  ${el.type}/${el.id}: ${holes.elements.length} holes, par ${par}, tags ${JSON.stringify(el.tags)}`);
+  try {
+    const holes = await rawOverpass(`[out:json][timeout:25];way["golf"="hole"](${box});out tags;`);
+    const par = holes.elements.reduce((sum, h) => sum + (parseInt(h.tags.par, 10) || 0), 0);
+    console.log(`  ${el.type}/${el.id}: ${holes.elements.length} holes, par ${par}, tags ${JSON.stringify(el.tags)}`);
+  } catch (e) {
+    console.log(`  ${el.type}/${el.id}: couldn't check (${e.message})`);
+  }
 }
 
 // Does Overpass let a web page (with an Origin header) read its answers?
@@ -79,7 +88,7 @@ for (const url of SERVERS) {
 let previous = [];
 try { previous = JSON.parse(await readFile(new URL('index.json', outDir), 'utf8')); } catch { /* first run */ }
 const index = [];
-for (const preset of PRESETS) {
+for (const preset of PRESETS.filter(p => !p.unmapped)) {
   const keepOld = () => {
     const old = previous.find(e => e.preset === preset.name);
     if (old) { index.push(old); console.log(`  keeping the saved copy (${old.file})`); }

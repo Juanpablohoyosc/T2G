@@ -19,15 +19,16 @@ export const ATTRIBUTION = 'Course data © OpenStreetMap contributors (ODbL)';
 
 // A course search is small and should be quick; loading every hole, green and
 // hazard of a course is heavier, so give each server longer before asking the next.
-const QUICK = { deadlineMs: 30000, staggerMs: 5000 };
-const HEAVY = { deadlineMs: 75000, staggerMs: 15000 };
+const QUICK = { deadlineMs: 60000, staggerMs: 10000 };
+const HEAVY = { deadlineMs: 90000, staggerMs: 20000 };
 
 // Northwest Arkansas: Fayetteville, Johnson, Springdale, Rogers, Bentonville.
 const NWA_BBOX = '35.95,-94.45,36.45,-93.95';
 
 export const PRESETS = [
   { label: 'Lakeside Village Golf', place: 'Fayetteville, AR', name: 'Lakeside Village' },
-  { label: 'The Links at Fayetteville', place: 'Fayetteville, AR', name: 'Links at Fayetteville' },
+  // Not on OpenStreetMap (checked October 2026): add it with the course builder.
+  { label: 'The Links at Fayetteville', place: 'Fayetteville, AR', name: 'Links at Fayetteville', unmapped: true },
   { label: 'Blessings Golf Club', place: 'Johnson, AR', name: 'Blessings' },
 ];
 

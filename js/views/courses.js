@@ -15,8 +15,11 @@ export function initCourseSheet({ showToast }) {
   toast = showToast;
   const sheet = $('course-sheet');
 
-  $('preset-list').replaceChildren(...PRESETS.map(p =>
-    row(p.label, p.place, () => run(() => loadPreset(p)))));
+  $('preset-list').replaceChildren(...PRESETS.map(p => p.unmapped
+    ? row(p.label, `${p.place} · not on OpenStreetMap yet`, () => setMsg(
+      `${p.label} hasn’t been mapped on OpenStreetMap, so there’s no hole data to load. You’ll be able to add it yourself with the course builder.`,
+      { error: true }))
+    : row(p.label, p.place, () => run(() => loadPreset(p)))));
 
   $('near-btn').addEventListener('click', () => run(searchNearMe));
   sheet.addEventListener('close', () => { $('near-list').replaceChildren(); setMsg(''); });
