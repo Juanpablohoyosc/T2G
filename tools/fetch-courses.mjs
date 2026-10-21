@@ -45,7 +45,35 @@ await mkdir(outDir, { recursive: true });
 
 console.log('Golf courses mapped in Northwest Arkansas:');
 const all = await rawOverpass('[out:json][timeout:25];(way["leisure"="golf_course"](35.95,-94.45,36.45,-93.95);relation["leisure"="golf_course"](35.95,-94.45,36.45,-93.95););out tags bb;');
-for (const el of all.elements) console.log(`  - ${el.tags?.name || '(no name)'}  [${el.type}/${el.id}]`);
+for (const el of all.elements) {
+  const b = el.bounds;
+  const center = b ? `${((b.minlat + b.maxlat) / 2).toFixed(5)}, ${((b.minlon + b.maxlon) / 2).toFixed(5)}` : '?';
+  console.log(`  - ${el.tags?.name || '(no name)'}  [${el.type}/${el.id}] at ${center}`);
+}
+
+// Unnamed courses: how many holes, total par and the address tags, to tell them apart.
+for (const el of all.elements.filter(e => !e.tags?.name || /Rainbow/.test(e.tags.name))) {
+  const b = el.bounds;
+  const box = `${b.minlat},${b.minlon},${b.maxlat},${b.maxlon}`;
+  const holes = await rawOverpass(`[out:json][timeout:25];way["golf"="hole"](${box});out tags;`);
+  const par = holes.elements.reduce((sum, h) => sum + (parseInt(h.tags.par, 10) || 0), 0);
+  console.log(`  ${el.type}/${el.id}: ${holes.elements.length} holes, par ${par}, tags ${JSON.stringify(el.tags)}`);
+}
+
+// Does Overpass let a web page (with an Origin header) read its answers?
+for (const url of SERVERS) {
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Origin: 'https://juanpablohoyosc.github.io' },
+      body: new URLSearchParams({ data: '[out:json];node(1);out;' }),
+      signal: AbortSignal.timeout(30000),
+    });
+    console.log(`  CORS check ${new URL(url).hostname}: HTTP ${res.status}, allow-origin: ${res.headers.get('access-control-allow-origin') || 'none'}`);
+  } catch (e) {
+    console.log(`  CORS check ${new URL(url).hostname}: ${e.message}`);
+  }
+}
 
 const index = [];
 for (const preset of PRESETS) {

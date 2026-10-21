@@ -105,7 +105,28 @@ async function run(task) {
   }
 }
 
+// Preset courses ship with the app as files in data/courses/ (fetched from
+// OpenStreetMap ahead of time), so they open instantly even when the free
+// OpenStreetMap servers are down. Returns null when there's no bundled copy.
+async function bundledCourse(preset) {
+  try {
+    const index = await (await fetch('data/courses/index.json', { cache: 'no-cache' })).json();
+    const entry = index.find(e => e.preset === preset.name);
+    if (!entry) return null;
+    const course = await (await fetch(`data/courses/${entry.file}`, { cache: 'no-cache' })).json();
+    return Array.isArray(course.holes) && course.holes.length ? course : null;
+  } catch {
+    return null;
+  }
+}
+
 async function loadPreset(preset) {
+  setMsg(`Opening ${preset.label}…`, { waiting: true });
+  const bundled = await bundledCourse(preset);
+  if (bundled) {
+    play(bundled);
+    return;
+  }
   setMsg(`Searching OpenStreetMap for ${preset.label}…`, { waiting: true });
   const found = await findCoursesByName(preset.name);
   if (found.length === 0) {
@@ -149,19 +170,25 @@ function currentPoint() {
 
 async function loadAndSave(summary) {
   setMsg(`Loading holes for ${summary.name}…`, { waiting: true });
-  const { course, report } = await loadCourse(summary);
+  const { course } = await loadCourse(summary);
+  play(course);
+}
+
+function play(course) {
   if (!saveCourse(course)) {
     throw new Error('This phone’s storage for T2G is full. Delete a course and try again.');
   }
   forgetCachedCourse();
   setState({ courseId: course.id, holeIndex: 0 });
   $('course-sheet').close();
-  toast(describe(course, report));
+  toast(describe(course));
 }
 
-function describe(course, report) {
+function describe(course) {
+  const withoutGreen = course.holes.filter(h => !h.greenOutline).length;
+  const withoutPar = course.holes.filter(h => !h.par).length;
   const parts = [`Loaded ${course.name}: ${course.holes.length} holes.`];
-  if (report.withoutGreen) parts.push(`${report.withoutGreen} without a mapped green show center only.`);
-  if (report.withoutPar) parts.push(`Par isn’t mapped for ${report.withoutPar}.`);
+  if (withoutGreen) parts.push(`${withoutGreen} without a mapped green show center only.`);
+  if (withoutPar) parts.push(`Par isn’t mapped for ${withoutPar}.`);
   return parts.join(' ');
 }
