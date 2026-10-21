@@ -1,22 +1,182 @@
 [
   {
+    "osm": "relation/3373894",
+    "name": "Bella Vista Country Club Golf Course",
+    "center": [
+      36.48167,
+      -94.2585
+    ],
+    "holes": 18,
+    "file": "osm-relation-3373894.json"
+  },
+  {
+    "osm": "relation/9392523",
+    "name": "Big Sugar Golf Club",
+    "center": [
+      36.42275,
+      -94.10378
+    ],
+    "holes": 18,
+    "file": "osm-relation-9392523.json"
+  },
+  {
     "osm": "relation/6677178",
     "name": "Blessings Golf Club",
     "center": [
-      36.13281,
-      -94.19164
+      36.1311,
+      -94.19287
     ],
     "holes": 18,
     "file": "osm-relation-6677178.json"
   },
   {
+    "osm": "relation/3949162",
+    "name": "Branchwood Disc Golf Course",
+    "center": [
+      36.48992,
+      -94.34973
+    ],
+    "holes": 0,
+    "file": null
+  },
+  {
+    "osm": "relation/9382373",
+    "name": "Brittany",
+    "center": [
+      36.45646,
+      -94.19633
+    ],
+    "holes": 9,
+    "file": "osm-relation-9382373.json"
+  },
+  {
+    "osm": "way/1346911937",
+    "name": "Brush Creek Golf Course",
+    "center": [
+      36.1883,
+      -94.20084
+    ],
+    "holes": 9,
+    "file": "osm-way-1346911937.json"
+  },
+  {
+    "osm": "relation/9382374",
+    "name": "Dogwood Golf Course",
+    "center": [
+      36.45562,
+      -94.18054
+    ],
+    "holes": 18,
+    "file": "osm-relation-9382374.json"
+  },
+  {
+    "osm": "way/115439242",
+    "name": "Fayetteville Country Club",
+    "center": [
+      36.02614,
+      -94.15925
+    ],
+    "holes": 18,
+    "file": "osm-way-115439242.json"
+  },
+  {
+    "osm": "relation/3949168",
+    "name": "Highlands Golf Course",
+    "center": [
+      36.47674,
+      -94.36816
+    ],
+    "holes": 18,
+    "file": "osm-relation-3949168.json"
+  },
+  {
+    "osm": "way/251436708",
+    "name": "Kingswood Berksdale Golf Course",
+    "center": [
+      36.45989,
+      -94.24326
+    ],
+    "holes": 18,
+    "file": "osm-way-251436708.json"
+  },
+  {
     "osm": "way/860284480",
     "name": "Lakeside Village Golf Course",
     "center": [
-      36.10098,
-      -94.15931
+      36.10118,
+      -94.15911
     ],
     "holes": 9,
     "file": "osm-way-860284480.json"
+  },
+  {
+    "osm": "way/1018564696",
+    "name": "Lost Springs Golf & Athletic Club",
+    "center": [
+      36.36277,
+      -94.1492
+    ],
+    "holes": 18,
+    "file": "osm-way-1018564696.json"
+  },
+  {
+    "osm": "way/296932145",
+    "name": "Paradise Valley Golf and Athletic Club",
+    "center": [
+      36.11668,
+      -94.12488
+    ],
+    "holes": 18,
+    "file": "osm-way-296932145.json"
+  },
+  {
+    "osm": "relation/3373895",
+    "name": "Scotsdale Golf Course",
+    "center": [
+      36.48453,
+      -94.30657
+    ],
+    "holes": 18,
+    "file": "osm-relation-3373895.json"
+  },
+  {
+    "osm": "way/726595178",
+    "name": "The Creeks",
+    "center": [
+      36.24613,
+      -94.24316
+    ],
+    "holes": 18,
+    "file": "osm-way-726595178.json"
+  },
+  {
+    "osm": "way/251437095",
+    "name": "The Greens on Blossom Way",
+    "center": [
+      36.29294,
+      -94.16753
+    ],
+    "holes": 9,
+    "file": "osm-way-251437095.json"
+  },
+  {
+    "osm": "relation/3373897",
+    "name": "The Links at Bentonville",
+    "center": [
+      36.3496,
+      -94.186
+    ],
+    "holes": 0,
+    "file": null
+  },
+  {
+    "osm": "way/223993859",
+    "name": "The Links at Rainbow Curve Golf and Country Club",
+    "center": [
+      36.34066,
+      -94.23362
+    ],
+    "holes": 0,
+    "file": null
   }
 ]
