@@ -14,13 +14,30 @@ globalThis.fetch = (url, opts = {}) => realFetch(url, {
   headers: { 'User-Agent': 'T2G course fetcher (github.com/Juanpablohoyosc/T2G)', ...(opts.headers || {}) },
 });
 
+const SERVERS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+];
+
+// Tries each server in turn and logs how each one answered.
 async function rawOverpass(query) {
-  const res = await fetch('https://overpass-api.de/api/interpreter', {
-    method: 'POST',
-    body: new URLSearchParams({ data: query }),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  for (const url of SERVERS) {
+    const host = new URL(url).hostname;
+    const t0 = Date.now();
+    try {
+      const res = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: query }), signal: AbortSignal.timeout(60000) });
+      const secs = ((Date.now() - t0) / 1000).toFixed(1);
+      if (!res.ok) { console.log(`    ${host}: HTTP ${res.status} after ${secs} s`); continue; }
+      const cors = res.headers.get('access-control-allow-origin');
+      console.log(`    ${host}: OK after ${secs} s (CORS: ${cors || 'none'})`);
+      return await res.json();
+    } catch (e) {
+      console.log(`    ${host}: ${e.name === 'TimeoutError' ? 'no answer in 60 s' : e.message}`);
+    }
+  }
+  throw new Error('every server failed');
 }
 
 const outDir = new URL('../data/courses/', import.meta.url);
