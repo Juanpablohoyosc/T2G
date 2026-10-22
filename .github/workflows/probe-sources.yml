@@ -23,3 +23,4 @@ jobs:
         env:
           URLS: ${{ inputs.urls }}
       - run: node tools/probe-opengolf.mjs
+      - run: node tools/probe-opengolf-holes.mjs
