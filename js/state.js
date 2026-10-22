@@ -43,3 +43,10 @@ export function currentHole() {
   if (!course || !course.holes.length) return null;
   return course.holes[Math.min(Math.max(state.holeIndex, 0), course.holes.length - 1)];
 }
+
+export function stepHole(dir) {
+  const course = currentCourse();
+  if (!course || !course.holes.length) return;
+  const n = course.holes.length;
+  setState({ holeIndex: (state.holeIndex + dir + n) % n });
+}

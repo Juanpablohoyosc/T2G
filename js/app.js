@@ -3,7 +3,9 @@
 import { state, setState, onState } from './state.js';
 import * as loc from './location.js';
 import { setWakeLock, wakeLockSupported } from './wakelock.js';
-import { initDistanceView, demoStartPoint } from './views/distance.js';
+import * as demo from './demo.js';
+import { initDistanceView } from './views/distance.js';
+import { initMapView, showMap, hideMap } from './views/map.js';
 import { initCourseSheet, openCourseSheet } from './views/courses.js';
 
 const $ = id => document.getElementById(id);
@@ -16,7 +18,8 @@ function applyTheme() {
 }
 
 function applyMode() {
-  if (state.demo) loc.startDemo(demoStartPoint());
+  demo.stopWalk();
+  if (state.demo) loc.startDemo(demo.startPoint());
   else loc.startGps();
   $('app').classList.toggle('demo', state.demo);
   $('demo-banner').hidden = !state.demo;
@@ -66,6 +69,19 @@ function initSheets() {
   }
 }
 
+// Bottom tabs: the yardage screen and the satellite map.
+function showTab(tab) {
+  document.querySelectorAll('.tabbar [data-tab]').forEach(b => {
+    if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page');
+    else b.removeAttribute('aria-current');
+  });
+  $('gps-view').hidden = tab !== 'gps';
+  $('map-view').hidden = tab !== 'map';
+  $('app').dataset.tab = tab;
+  if (tab === 'map') showMap();
+  else hideMap();
+}
+
 function openSettings() {
   syncSettingsSheet();
   $('settings-sheet').showModal();
@@ -74,8 +90,13 @@ function openSettings() {
 initSheets();
 initCourseSheet({ showToast });
 initDistanceView({ openCourses: openCourseSheet, openSettings });
+initMapView();
+document.querySelectorAll('.tabbar [data-tab]').forEach(b =>
+  b.addEventListener('click', () => showTab(b.dataset.tab)));
 
 onState(patch => {
+  // A new hole or course puts the demo player back on its tee.
+  if (state.demo && ('courseId' in patch || 'holeIndex' in patch)) demo.resetToTee();
   if ('theme' in patch) applyTheme();
   if ('demo' in patch) applyMode();
   if ('keepAwake' in patch) setWakeLock(state.keepAwake);
@@ -84,4 +105,5 @@ onState(patch => {
 
 applyTheme();
 applyMode();
+showTab('gps');
 setWakeLock(state.keepAwake);

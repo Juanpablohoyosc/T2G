@@ -6,6 +6,7 @@ A free, mobile-first golf GPS rangefinder that runs in the phone's browser. It's
 
 ## Done so far
 
+- **Step 2: satellite map.** Tap any spot on any course to see the distance from you to it and from it to the green. Drag the target to fine-tune it. The current hole is drawn over the imagery (line of play, green outline, flag, bunkers, water). Esri World Imagery is the default, with an OpenStreetMap street map as a fallback that also switches in automatically if the imagery can't load. In demo mode you can drag the red player anywhere on the map or press **Auto-walk** to walk it from tee to green, and every number updates live.
 - **Step 1: live distance screen.** Front, center and back of the current green in large type. Shows hole number and par, with arrows or a swipe to change holes. GPS accuracy is shown as ±X yd, with a warning past ±10 yd. Includes a yards/meters toggle, dark and sun modes, Screen Wake Lock and demo mode with a simulated player.
 
 ## Course data

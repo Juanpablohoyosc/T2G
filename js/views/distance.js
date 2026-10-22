@@ -1,12 +1,11 @@
 // Main screen: front / center / back of the current green, hole switching,
 // GPS accuracy and the demo-mode position slider.
 
-import { state, setState, onState, currentCourse, currentHole } from '../state.js';
-import { greenDistances, holePath } from '../courses.js';
+import { state, onState, currentCourse, currentHole, stepHole } from '../state.js';
+import { greenDistances } from '../courses.js';
 import * as loc from '../location.js';
-import {
-  formatDistance, unitLabel, toUnits, haversine, pointAlong, pathLength, unproject, M_PER_YD,
-} from '../geo.js';
+import * as demo from '../demo.js';
+import { formatDistance, unitLabel, toUnits, haversine, pointAlong, M_PER_YD } from '../geo.js';
 
 const $ = id => document.getElementById(id);
 
@@ -15,7 +14,6 @@ const FAR_AWAY = 1500 * M_PER_YD;    // farther than this, you're not on the hol
 const STALE_MS = 60000;              // no fix for a minute: the signal likely dropped
 
 let snap = loc.snapshot();
-let demoFraction = 0;
 
 export function initDistanceView({ openCourses, openSettings }) {
   $('empty-course-btn').addEventListener('click', openCourses);
@@ -27,33 +25,21 @@ export function initDistanceView({ openCourses, openSettings }) {
     else if (snap.status !== 'ok' || isStale()) loc.startGps();
   });
 
-  $('demo-slider').addEventListener('input', e => {
-    demoFraction = Number(e.target.value) / 1000;
-    placeDemoPlayer();
-  });
+  $('demo-slider').addEventListener('input', e => demo.placeAtFraction(Number(e.target.value) / 1000));
   $('demo-chips').addEventListener('click', e => {
     const to = e.target.closest('button')?.dataset.to;
     if (!to) return;
-    demoFraction = to === 'tee' ? 0 : fractionAtDistanceToCenter(Number(to));
-    placeDemoPlayer();
+    demo.placeAtFraction(to === 'tee' ? 0 : fractionAtDistanceToCenter(Number(to)));
   });
+  $('demo-walk').addEventListener('click', () => (demo.isWalking() ? demo.stopWalk() : demo.walk()));
+  demo.onDemoChange(() => { const hole = currentHole(); if (hole) renderDemoPanel(hole); });
 
   bindSwipe($('gps-view'));
 
   loc.subscribe(s => { snap = s; render(); });
-  onState(patch => {
-    if ('courseId' in patch || 'holeIndex' in patch) resetDemoPlayer();
-    render();
-  });
+  onState(render);
   setInterval(renderStatus, 5000);
   render();
-}
-
-function stepHole(dir) {
-  const course = currentCourse();
-  if (!course || !course.holes.length) return;
-  const n = course.holes.length;
-  setState({ holeIndex: (state.holeIndex + dir + n) % n });
 }
 
 // Swipe left/right anywhere on the main screen to change holes.
@@ -74,31 +60,10 @@ function bindSwipe(el) {
 
 // ---------- demo player ----------
 
-// The line the simulated player walks. A hole with no tee mapped gets a
-// stand-in start 150 m short of the green so the demo still works.
-function demoPath(hole) {
-  return holePath(hole) || [unproject(hole.green.center, [0, -150]), hole.green.center];
-}
-
-export function resetDemoPlayer() {
-  demoFraction = 0;
-  if (snap.mode === 'demo') placeDemoPlayer();
-}
-
-export function demoStartPoint() {
-  const hole = currentHole();
-  return hole ? pointAlong(demoPath(hole), demoFraction) : null;
-}
-
-function placeDemoPlayer() {
-  const point = demoStartPoint();
-  if (point) loc.setDemoPosition(point);
-}
-
 function fractionAtDistanceToCenter(target) {
   const hole = currentHole();
   if (!hole) return 0;
-  const path = demoPath(hole);
+  const path = demo.demoPath(hole);
   const meters = target * (state.units === 'm' ? 1 : M_PER_YD);
   let lo = 0, hi = 1;
   for (let i = 0; i < 30; i++) {
@@ -167,10 +132,18 @@ function renderDemoPanel(hole) {
   const panel = $('demo-panel');
   panel.hidden = snap.mode !== 'demo';
   if (panel.hidden) return;
-  const path = demoPath(hole);
-  const fromTee = pathLength(path) * demoFraction;
-  $('demo-slider').value = Math.round(demoFraction * 1000);
-  $('demo-out').textContent = `${formatDistance(fromTee, state.units)} ${unitLabel(state.units)} from tee`;
+  const path = demo.demoPath(hole);
+  const point = snap.position?.point;
+  const fraction = demo.getFraction();
+  if (fraction != null) $('demo-slider').value = Math.round(fraction * 1000);
+  $('demo-out').textContent = point
+    ? `${formatDistance(haversine(path[0], point), state.units)} ${unitLabel(state.units)} from tee`
+    : '';
+
+  const walking = demo.isWalking();
+  const walkBtn = $('demo-walk');
+  walkBtn.setAttribute('aria-label', walking ? 'Stop walking' : 'Auto-walk to the green');
+  walkBtn.classList.toggle('walking', walking);
 
   const toCenter = toUnits(haversine(path[0], hole.green.center), state.units);
   $('demo-chips').querySelectorAll('button[data-to]').forEach(b => {

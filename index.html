@@ -7,7 +7,9 @@
   <meta name="description" content="T2G (Tee to Green): a free golf GPS rangefinder that runs in your phone's browser.">
   <title>T2G · Tee to Green</title>
   <link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="css/app.css">
+  <script src="vendor/leaflet/leaflet.js" defer></script>
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
@@ -75,7 +77,13 @@
             <label for="demo-slider">Move the simulated player</label>
             <output id="demo-out" for="demo-slider"></output>
           </div>
-          <input type="range" id="demo-slider" min="0" max="1000" step="1" value="0">
+          <div class="demo-track">
+            <button class="walk-btn" id="demo-walk" type="button" aria-label="Auto-walk to the green">
+              <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+              <svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v10H7z"/></svg>
+            </button>
+            <input type="range" id="demo-slider" min="0" max="1000" step="1" value="0" aria-label="Simulated player position along the hole">
+          </div>
           <div class="chips" id="demo-chips">
             <button type="button" data-to="tee">Tee</button>
             <button type="button" data-to="150">150 out</button>
@@ -86,6 +94,51 @@
       </section>
     </main>
 
+    <main class="map-view" id="map-view" hidden>
+      <div class="map" id="map" aria-label="Satellite map. Tap to measure to any spot."></div>
+      <div class="map-top">
+        <div class="map-hole" id="map-hole" hidden>
+          <button type="button" id="map-prev" aria-label="Previous hole">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <span id="map-hole-label">Hole 1</span>
+          <button type="button" id="map-next" aria-label="Next hole">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="map-tools">
+          <button type="button" class="map-btn" id="layer-btn" aria-label="Switch to street map">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>
+          </button>
+          <button type="button" class="map-btn" id="fit-btn" aria-label="Show the whole hole">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          </button>
+          <button type="button" class="map-btn" id="locate-btn" aria-label="Center on my position">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="measure" id="measure">
+        <div class="measure-row" id="measure-green">
+          <div class="m"><span class="m-label">Front</span><span class="m-val small" id="mg-front">—</span></div>
+          <div class="m"><span class="m-label">Center</span><span class="m-val" id="mg-center">—</span></div>
+          <div class="m"><span class="m-label">Back</span><span class="m-val small" id="mg-back">—</span></div>
+        </div>
+        <div class="measure-row" id="measure-target" hidden>
+          <div class="m"><span class="m-label">You to target</span><span class="m-val" id="mt-you">—</span></div>
+          <div class="m" id="mt-green-box"><span class="m-label">Target to green</span><span class="m-val" id="mt-green">—</span></div>
+          <button type="button" class="clear-btn" id="clear-target" aria-label="Clear the target">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <p class="measure-hint" id="measure-hint">Tap the map to measure to any spot.</p>
+        <div class="map-demo" id="map-demo" hidden>
+          <button type="button" class="btn primary" id="map-walk">Auto-walk to green</button>
+          <span>or drag the red player</span>
+        </div>
+      </div>
+    </main>
+
     <footer class="statusbar">
       <button class="gps-status" id="gps-status" type="button">
         <span class="dot" aria-hidden="true"></span>
@@ -93,6 +146,17 @@
       </button>
       <span class="data-source" id="data-source"></span>
     </footer>
+
+    <nav class="tabbar" aria-label="Screens">
+      <button type="button" data-tab="gps" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4l11 4-11 4"/><path d="M3 21h8"/></svg>
+        <span>Yardage</span>
+      </button>
+      <button type="button" data-tab="map">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+        <span>Map</span>
+      </button>
+    </nav>
   </div>
 
   <dialog class="sheet" id="course-sheet" aria-labelledby="course-sheet-title">
