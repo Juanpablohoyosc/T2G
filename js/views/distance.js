@@ -1,8 +1,8 @@
 // Main screen: front / center / back of the current green, hole switching,
 // GPS accuracy and the demo-mode position slider.
 
-import { state, onState, currentCourse, currentHole, stepHole } from '../state.js';
-import { greenDistances } from '../courses.js';
+import { state, onState, currentCourse, currentHole, currentTee, stepHole } from '../state.js';
+import { greenDistances, hasGreen, holeYards } from '../courses.js';
 import * as loc from '../location.js';
 import * as demo from '../demo.js';
 import { formatDistance, unitLabel, toUnits, haversine, pointAlong, M_PER_YD } from '../geo.js';
@@ -62,8 +62,8 @@ function bindSwipe(el) {
 
 function fractionAtDistanceToCenter(target) {
   const hole = currentHole();
-  if (!hole) return 0;
   const path = demo.demoPath(hole);
+  if (!path) return 0;
   const meters = target * (state.units === 'm' ? 1 : M_PER_YD);
   let lo = 0, hi = 1;
   for (let i = 0; i < 30; i++) {
@@ -90,9 +90,12 @@ function render() {
   renderStatus();
   if (!hole) return;
 
+  const yards = holeYards(hole, currentTee());
   $('hole-num').textContent = hole.number;
-  $('hole-par').textContent = hole.par ? `Par ${hole.par}` : 'Par —';
-  $('hole-of').textContent = `of ${course.holes.length}`;
+  $('hole-par').textContent = `${hole.par ? `Par ${hole.par}` : 'Par —'}${hole.handicap ? ` · Hcp ${hole.handicap}` : ''}`;
+  $('hole-of').textContent = yards
+    ? `${formatDistance(yards * M_PER_YD, state.units)} ${unitLabel(state.units)} · ${currentTee()}`
+    : `of ${course.holes.length}`;
   $('d-unit').textContent = unitLabel(state.units);
 
   renderDistances(hole);
@@ -106,13 +109,17 @@ function renderDistances(hole) {
   const far = d && d.center > FAR_AWAY;
   const show = m => (d && !far ? formatDistance(m, state.units) : '—');
 
-  $('d-front').textContent = show(d?.front);
-  $('d-center').textContent = show(d?.center);
-  $('d-back').textContent = show(d?.back);
+  for (const [id, m] of [['d-front', d?.front], ['d-center', d?.center], ['d-back', d?.back]]) {
+    const text = show(m);
+    $(id).textContent = text;
+    $(id).classList.toggle('none', text === '—');
+  }
   $('dists').classList.toggle('stale', !!isStale());
 
   let text = '';
-  if (far) {
+  if (!hasGreen(hole)) {
+    text = 'This course has its scorecard but no green positions mapped. Open the Map and tap the green to measure.';
+  } else if (far) {
     const miles = d.center / 1609.344;
     text = `You're ${miles.toFixed(1)} mi from hole ${hole.number}. Turn on Demo mode in Settings to try it from here.`;
   } else if (d && (d.front == null || d.back == null)) {
@@ -130,9 +137,9 @@ function renderDistances(hole) {
 
 function renderDemoPanel(hole) {
   const panel = $('demo-panel');
-  panel.hidden = snap.mode !== 'demo';
-  if (panel.hidden) return;
   const path = demo.demoPath(hole);
+  panel.hidden = snap.mode !== 'demo' || !path;
+  if (panel.hidden) return;
   const point = snap.position?.point;
   const fraction = demo.getFraction();
   if (fraction != null) $('demo-slider').value = Math.round(fraction * 1000);

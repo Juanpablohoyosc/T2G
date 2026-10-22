@@ -6,7 +6,7 @@ A free, mobile-first golf GPS rangefinder that runs in the phone's browser. It's
 
 ## Done so far
 
-- **Step 2: satellite map.** Tap any spot on any course to see the distance from you to it and from it to the green. Drag the target to fine-tune it. The current hole is drawn over the imagery (line of play, green outline, flag, bunkers, water). Esri World Imagery is the default, with an OpenStreetMap street map as a fallback that also switches in automatically if the imagery can't load. In demo mode you can drag the red player anywhere on the map or press **Auto-walk** to walk it from tee to green, and every number updates live.
+- **Step 2: satellite map.** Tap any spot on any course to see the distance from you to it and from it to the green. Drag the target to fine-tune it. The current hole is drawn over the imagery (line of play, green outline, flag, bunkers, water). Esri World Imagery is the default. If it can't load, the app switches to the public-domain USGS imagery and then to the OpenStreetMap street map. The layer button also switches to the street map by hand. In demo mode you can drag the red player anywhere on the map or press **Auto-walk** to walk it from tee to green, and every number updates live.
 - **Step 1: live distance screen.** Front, center and back of the current green in large type. Shows hole number and par, with arrows or a swipe to change holes. GPS accuracy is shown as ±X yd, with a warning past ±10 yd. Includes a yards/meters toggle, dark and sun modes, Screen Wake Lock and demo mode with a simulated player.
 
 ## Course data
@@ -36,6 +36,8 @@ In October 2026 the catalog has 17 courses in Northwest Arkansas. Fifteen have e
 | The Greens on Blossom Way | 9 | not mapped |
 
 The Links at Bentonville and The Links at Rainbow Curve are on OpenStreetMap without holes. The Links at Fayetteville isn't on it at all.
+
+**Scorecards** come from [OpenGolfAPI](https://opengolfapi.org/) (free, no key, ODbL). The same GitHub Action matches each course by location and name. When the hole counts agree, it adds handicaps and yardage per tee and fills in any missing par; OpenStreetMap's par wins if the two disagree. Courses that OpenStreetMap has no holes for are added as **scorecard** courses (par, handicap, location; measure on the map) or **map-only** courses. As a check, the scorecard yardages agree with the tee-to-green distances measured from OpenStreetMap to within a few yards on most holes (doglegs aside).
 
 Other courses are loaded from [OpenStreetMap](https://www.openstreetmap.org/copyright) through the free Overpass API, then saved on the phone. Holes (`golf=hole`) and greens (`golf=green`) are volunteer-mapped, so a course is only as complete as its mapping. T2G never makes up coordinates. Course data © OpenStreetMap contributors, available under the ODbL.
 

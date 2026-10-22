@@ -1,22 +1,33 @@
 // Satellite map: tap anywhere to measure (works on any course, mapped or
 // not), the current hole drawn over the imagery, and the draggable demo player.
 
-import { state, onState, currentCourse, currentHole, stepHole } from '../state.js';
-import { greenDistances, holePath } from '../courses.js';
+import { state, onState, currentCourse, currentHole, currentTee, stepHole } from '../state.js';
+import { greenDistances, holePath, hasGreen, holeYards } from '../courses.js';
 import * as loc from '../location.js';
 import * as demo from '../demo.js';
-import { formatDistance, unitLabel, haversine } from '../geo.js';
+import { formatDistance, unitLabel, haversine, M_PER_YD } from '../geo.js';
 
 const $ = id => document.getElementById(id);
 
+// Esri satellite imagery first. If it can't load, the public-domain USGS
+// imagery (US only, less sharp up close), then the OpenStreetMap street map.
 const LAYERS = {
   satellite: {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: 'Imagery © Esri, Maxar, Earthstar Geographics and the GIS User Community',
+    maxNativeZoom: 19,
+    fallback: 'usgs',
+  },
+  usgs: {
+    url: 'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Imagery: USGS The National Map',
+    maxNativeZoom: 16,
+    fallback: 'street',
   },
   street: {
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxNativeZoom: 19,
   },
 };
 const FALLBACK_VIEW = { center: [36.0687, -94.1748], zoom: 13 }; // Fayetteville, AR
@@ -26,6 +37,7 @@ let map = null;
 let snap = loc.snapshot();
 let visible = false;
 let needsFit = true;
+let pendingFocus = null; // a spot to show once the map exists
 
 let layerName = 'satellite';
 let baseLayer = null;
@@ -46,7 +58,7 @@ let targetLines = null;
 export function initMapView() {
   $('map-prev').addEventListener('click', () => stepHole(-1));
   $('map-next').addEventListener('click', () => stepHole(1));
-  $('layer-btn').addEventListener('click', () => setBase(layerName === 'satellite' ? 'street' : 'satellite'));
+  $('layer-btn').addEventListener('click', () => setBase(layerName === 'street' ? 'satellite' : 'street'));
   $('fit-btn').addEventListener('click', fitView);
   $('locate-btn').addEventListener('click', () => {
     const p = snap.position?.point;
@@ -100,7 +112,9 @@ function createMap() {
   holeLayer = L.layerGroup().addTo(map);
   targetLines = L.layerGroup().addTo(map);
   setBase('satellite');
-  map.setView(FALLBACK_VIEW.center, FALLBACK_VIEW.zoom);
+  if (pendingFocus) map.setView(pendingFocus.point, pendingFocus.zoom);
+  else map.setView(FALLBACK_VIEW.center, FALLBACK_VIEW.zoom);
+  pendingFocus = null;
   map.on('click', e => setTarget(latLon(e.latlng)));
   drawCourse();
   renderPlayer();
@@ -111,22 +125,24 @@ function createMap() {
 function setBase(name) {
   if (baseLayer) map.removeLayer(baseLayer);
   layerName = name;
-  const { url, attribution } = LAYERS[name];
-  baseLayer = L.tileLayer(url, { attribution, maxNativeZoom: 19, maxZoom: 21 }).addTo(map);
+  const { url, attribution, maxNativeZoom, fallback } = LAYERS[name];
+  baseLayer = L.tileLayer(url, { attribution, maxNativeZoom, maxZoom: 21 }).addTo(map);
   baseLayer.bringToBack();
 
-  // If the satellite imagery can't load at all, fall back to the street map.
-  if (name === 'satellite') {
+  // If this imagery can't load at all, move down to the next layer.
+  if (fallback) {
     let loaded = 0, failed = 0;
+    // Swap on the next tick: Leaflet is still inside its own tile event here.
+    const giveUp = () => {
+      if (loaded === 0 && failed > 0 && layerName === name) setTimeout(() => { if (layerName === name) setBase(fallback); });
+    };
     baseLayer.on('tileload', () => { loaded++; });
-    baseLayer.on('tileerror', () => {
-      failed++;
-      if (failed >= 6 && loaded === 0 && layerName === 'satellite') setBase('street');
-    });
+    baseLayer.on('tileerror', () => { failed++; if (failed >= 6) giveUp(); });
+    baseLayer.on('load', giveUp); // a whole screenful finished and none of it loaded
   }
-  const toStreet = name === 'satellite';
-  $('layer-btn').setAttribute('aria-label', toStreet ? 'Switch to street map' : 'Switch to satellite imagery');
-  $('layer-btn').classList.toggle('active', !toStreet);
+  const street = name === 'street';
+  $('layer-btn').setAttribute('aria-label', street ? 'Switch to satellite imagery' : 'Switch to street map');
+  $('layer-btn').classList.toggle('active', street);
 }
 
 // ---------- course and hole overlays ----------
@@ -156,7 +172,10 @@ function drawCourse() {
   const label = $('map-hole-label');
   $('map-hole').hidden = !hole;
   if (!hole) return;
-  label.textContent = `Hole ${hole.number}${hole.par ? ` · Par ${hole.par}` : ''}`;
+  const yards = holeYards(hole, currentTee());
+  label.textContent = `Hole ${hole.number}${hole.par ? ` · Par ${hole.par}` : ''}` +
+    (yards ? ` · ${formatDistance(yards * M_PER_YD, state.units)} ${unitLabel(state.units)}` : '');
+  if (!hasGreen(hole)) return; // scorecard only: nothing to draw
 
   const path = holePath(hole);
   if (path) {
@@ -187,13 +206,23 @@ function fitView() {
   if (!map) return;
   needsFit = false;
   const hole = currentHole();
+  const course = currentCourse();
   const pad = { paddingTopLeft: [24, 72], paddingBottomRight: [24, 24] };
-  if (hole) {
+  if (hasGreen(hole)) {
     const pts = [...(holePath(hole) || []), ...(hole.greenOutline || []), hole.green.center];
     map.fitBounds(L.latLngBounds(pts), { ...pad, maxZoom: 19 });
+  } else if (course?.center) {
+    map.setView(course.center, 16);
   } else if (snap.position) {
     map.setView(snap.position.point, 17);
   }
+}
+
+// Show a spot on the map, e.g. a course from the list that has no hole data.
+export function focusOn(point, zoom = 16) {
+  needsFit = false;
+  if (map) map.setView(point, zoom);
+  else pendingFocus = { point, zoom };
 }
 
 // ---------- player ----------
@@ -283,7 +312,7 @@ function renderTarget() {
   if (!target || !map) return;
   targetLines.clearLayers();
   const player = snap.position?.point;
-  const center = currentHole()?.green.center;
+  const center = currentHole()?.green?.center;
   if (player) {
     L.polyline([player, target], { interactive: false, color: '#fff', weight: 3, opacity: 0.95 }).addTo(targetLines);
   }
@@ -303,8 +332,8 @@ function renderCard() {
   const fmt = m => (m == null ? '—' : formatDistance(m, u));
 
   const green = $('measure-green');
-  const d = hole ? greenDistances(hole, point) : null;
-  green.hidden = !hole || !!target;
+  const d = hasGreen(hole) ? greenDistances(hole, point) : null;
+  green.hidden = !hasGreen(hole) || !!target;
   $('mg-front').textContent = fmt(d?.front);
   $('mg-center').textContent = d ? `${fmt(d.center)} ${unitLabel(u)}` : '—';
   $('mg-back').textContent = fmt(d?.back);
@@ -312,16 +341,17 @@ function renderCard() {
   $('measure-target').hidden = !target;
   if (target) {
     $('mt-you').textContent = point ? `${fmt(haversine(point, target))} ${unitLabel(u)}` : '—';
-    $('mt-green-box').hidden = !hole;
-    if (hole) $('mt-green').textContent = `${fmt(haversine(target, hole.green.center))} ${unitLabel(u)}`;
+    $('mt-green-box').hidden = !hasGreen(hole);
+    if (hasGreen(hole)) $('mt-green').textContent = `${fmt(haversine(target, hole.green.center))} ${unitLabel(u)}`;
   }
 
   const hint = $('measure-hint');
   if (target && !point) hint.textContent = 'Waiting for your position…';
   else if (target) hint.textContent = 'Drag the target to fine-tune it.';
+  else if (hole && !hasGreen(hole)) hint.textContent = 'No green positions for this course. Tap the green to measure.';
   else hint.textContent = hole ? 'Tap the map to measure to any spot.' : 'Tap the map to measure to any spot, on any course.';
 
   const walk = $('map-demo');
-  walk.hidden = !(snap.mode === 'demo' && hole);
+  walk.hidden = !(snap.mode === 'demo' && hasGreen(hole));
   $('map-walk').textContent = demo.isWalking() ? 'Stop walking' : 'Auto-walk to green';
 }

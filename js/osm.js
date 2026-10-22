@@ -27,8 +27,8 @@ const NWA_BBOX = '35.95,-94.45,36.45,-93.95';
 
 export const PRESETS = [
   { label: 'Lakeside Village Golf', place: 'Fayetteville, AR', name: 'Lakeside Village' },
-  // Not on OpenStreetMap (checked October 2026): add it with the course builder.
-  { label: 'The Links at Fayetteville', place: 'Fayetteville, AR', name: 'Links at Fayetteville', unmapped: true },
+  // No holes on OpenStreetMap; the catalog has its scorecard from OpenGolfAPI.
+  { label: 'The Links at Fayetteville', place: 'Fayetteville, AR', name: 'Links at Fayetteville' },
   { label: 'Blessings Golf Club', place: 'Johnson, AR', name: 'Blessings' },
 ];
 

@@ -59,7 +59,8 @@ export function cleanScorecard(holes) {
   const hcps = sorted.map(h => h.handicap_index);
   const hcpOk = hcps.every(n => Number.isInteger(n) && n >= 1 && n <= 18) && new Set(hcps).size === hcps.length;
 
-  const teeNames = Object.keys(sorted[0].yardages || {});
+  // "web" is a source artifact in OpenGolfAPI, not a tee anyone plays from.
+  const teeNames = Object.keys(sorted[0].yardages || {}).filter(t => !/^web$/i.test(t));
   const tees = teeNames.filter(t => sorted.every(h => {
     const y = h.yardages?.[t];
     return Number.isFinite(y) && y >= TEE_RANGE[0] && y <= TEE_RANGE[1];
@@ -125,9 +126,11 @@ async function api(path) {
 }
 
 const list = data => (Array.isArray(data) ? data : data.courses || data.results || data.data || []);
+// "Links At Lowell The" -> "The Links At Lowell"
+const tidyName = n => (n || '').replace(/^(.*?),? The$/, 'The $1');
 const normalize = c => ({
   id: c.id,
-  name: c.name || c.course_name,
+  name: tidyName(c.name || c.course_name),
   lat: c.latitude ?? c.lat,
   lng: c.longitude ?? c.lng,
   holes: c.holes,

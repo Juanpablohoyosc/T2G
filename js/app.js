@@ -1,11 +1,11 @@
 // T2G startup: theme, settings sheet, GPS vs. demo mode, wake lock.
 
-import { state, setState, onState } from './state.js';
+import { state, setState, onState, currentCourse, currentTee, setTee } from './state.js';
 import * as loc from './location.js';
 import { setWakeLock, wakeLockSupported } from './wakelock.js';
 import * as demo from './demo.js';
 import { initDistanceView } from './views/distance.js';
-import { initMapView, showMap, hideMap } from './views/map.js';
+import { initMapView, showMap, hideMap, focusOn } from './views/map.js';
 import { initCourseSheet, openCourseSheet } from './views/courses.js';
 
 const $ = id => document.getElementById(id);
@@ -31,6 +31,13 @@ function syncSettingsSheet() {
   document.querySelectorAll('[data-theme-choice]').forEach(b =>
     b.setAttribute('aria-pressed', String(b.dataset.themeChoice === state.theme)));
   $('demo-toggle').checked = state.demo;
+
+  // Tee choice, for courses with a scorecard.
+  const tees = currentCourse()?.tees || [];
+  $('tee-setting').hidden = !tees.length;
+  const select = $('tee-select');
+  select.replaceChildren(...tees.map(t => new Option(`${t.name} · ${t.yards.toLocaleString('en-US')} yd`, t.name)));
+  select.value = currentTee() || '';
   $('wake-toggle').checked = state.keepAwake && wakeLockSupported;
 }
 
@@ -62,6 +69,7 @@ function initSheets() {
     b.addEventListener('click', () => setState({ theme: b.dataset.themeChoice })));
   $('demo-toggle').addEventListener('change', e => setState({ demo: e.target.checked }));
   $('wake-toggle').addEventListener('change', e => setState({ keepAwake: e.target.checked }));
+  $('tee-select').addEventListener('change', e => setTee(e.target.value));
 
   if (!wakeLockSupported) {
     $('wake-toggle').disabled = true;
@@ -78,8 +86,17 @@ function showTab(tab) {
   $('gps-view').hidden = tab !== 'gps';
   $('map-view').hidden = tab !== 'map';
   $('app').dataset.tab = tab;
+  document.documentElement.dataset.tab = tab;
   if (tab === 'map') showMap();
   else hideMap();
+}
+
+// Open the map on a spot (a course with no hole data); in demo mode the
+// simulated player goes there too.
+function showMapAt(point) {
+  focusOn(point, 16);
+  if (state.demo) demo.placeAtPoint(point);
+  showTab('map');
 }
 
 function openSettings() {
@@ -88,15 +105,19 @@ function openSettings() {
 }
 
 initSheets();
-initCourseSheet({ showToast });
+initCourseSheet({ showToast, showMapAt });
 initDistanceView({ openCourses: openCourseSheet, openSettings });
 initMapView();
 document.querySelectorAll('.tabbar [data-tab]').forEach(b =>
   b.addEventListener('click', () => showTab(b.dataset.tab)));
 
 onState(patch => {
-  // A new hole or course puts the demo player back on its tee.
-  if (state.demo && ('courseId' in patch || 'holeIndex' in patch)) demo.resetToTee();
+  // A new hole or course puts the demo player back on its tee, or in the
+  // middle of a course that only has a scorecard.
+  if (state.demo && ('courseId' in patch || 'holeIndex' in patch)) {
+    if (demo.startPoint()) demo.resetToTee();
+    else if ('courseId' in patch && currentCourse()?.center) demo.placeAtPoint(currentCourse().center);
+  }
   if ('theme' in patch) applyTheme();
   if ('demo' in patch) applyMode();
   if ('keepAwake' in patch) setWakeLock(state.keepAwake);

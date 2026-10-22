@@ -10,16 +10,15 @@ import * as loc from '../location.js';
 const $ = id => document.getElementById(id);
 let busy = false;
 let toast = () => {};
+let showOnMap = () => {};
 
-export function initCourseSheet({ showToast }) {
+export function initCourseSheet({ showToast, showMapAt }) {
   toast = showToast;
+  showOnMap = showMapAt;
   const sheet = $('course-sheet');
 
-  $('preset-list').replaceChildren(...PRESETS.map(p => p.unmapped
-    ? row(p.label, `${p.place} · not on OpenStreetMap yet`, () => setMsg(
-      `${p.label} hasn’t been mapped on OpenStreetMap, so there’s no hole data to load. You’ll be able to add it yourself with the course builder.`,
-      { error: true }))
-    : row(p.label, p.place, () => run(() => loadPreset(p)))));
+  $('preset-list').replaceChildren(...PRESETS.map(p =>
+    row(p.label, p.place, () => run(() => loadPreset(p)))));
 
   $('near-btn').addEventListener('click', () => run(searchNearMe));
   sheet.addEventListener('close', () => { $('near-list').replaceChildren(); setMsg(''); });
@@ -126,9 +125,19 @@ async function loadCatalog() {
   return catalog || [];
 }
 
+// What a catalog course offers, for the list.
+function describeEntry(entry) {
+  if (!entry.file) return 'map only: tap the green to measure';
+  if (entry.kind === 'scorecard') return `${entry.holes} holes · scorecard, tap the map for yardages`;
+  return `${entry.holes} holes`;
+}
+
 async function openCatalogCourse(entry) {
   if (!entry.file) {
-    setMsg(`${entry.name} is on OpenStreetMap, but its holes aren’t mapped yet, so there’s nothing to measure. You’ll be able to add it with the course builder.`, { error: true });
+    // No holes or scorecard anywhere: open the satellite map on the course.
+    $('course-sheet').close();
+    showOnMap(entry.center);
+    toast(`${entry.name}: no hole data, so tap the green on the map to measure.`);
     return;
   }
   setMsg(`Opening ${entry.name}…`, { waiting: true });
@@ -139,7 +148,7 @@ async function openCatalogCourse(entry) {
 
 async function loadPreset(preset) {
   const wanted = preset.name.toLowerCase();
-  const entry = (await loadCatalog()).find(e => e.file && e.name.toLowerCase().includes(wanted));
+  const entry = (await loadCatalog()).find(e => e.name.toLowerCase().includes(wanted));
   if (entry) {
     await openCatalogCourse(entry);
     return;
@@ -170,7 +179,7 @@ async function searchNearMe() {
     setMsg('');
     $('near-list').replaceChildren(...nearby.map(c => row(
       c.name,
-      `${milesTo(c).toFixed(1)} mi · ${c.file ? `${c.holes} holes` : 'holes not mapped yet'}`,
+      `${milesTo(c).toFixed(1)} mi · ${describeEntry(c)}`,
       () => run(() => openCatalogCourse(c)),
     )));
     return;
@@ -219,6 +228,9 @@ function play(course) {
 }
 
 function describe(course) {
+  if (!course.holes.some(h => h.green?.center)) {
+    return `Loaded ${course.name}: scorecard for ${course.holes.length} holes. No green positions yet, so open the Map and tap the green to measure.`;
+  }
   const withoutGreen = course.holes.filter(h => !h.greenOutline).length;
   const withoutPar = course.holes.filter(h => !h.par).length;
   const parts = [`Loaded ${course.name}: ${course.holes.length} holes.`];

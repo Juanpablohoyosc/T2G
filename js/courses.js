@@ -39,6 +39,23 @@ export function deleteCourse(id) {
   return save(KEY, listCourses().filter(c => c.id !== id));
 }
 
+// Scorecard-only courses (from OpenGolfAPI) have par and yardages but no
+// green position, so every distance helper checks this first.
+export const hasGreen = hole => !!hole?.green?.center;
+
+// The scorecard yardage to show: the chosen tee if the hole has it.
+export function holeYards(hole, tee) {
+  return (tee && hole?.yardages?.[tee]) || null;
+}
+
+// Default tee set: the one closest to a typical 6,300-yard (18-hole) length.
+export function defaultTee(course) {
+  const tees = course?.tees || [];
+  if (!tees.length) return null;
+  const typical = 6300 * (course.holes.length / 18);
+  return [...tees].sort((a, b) => Math.abs(a.yards - typical) - Math.abs(b.yards - typical))[0].name;
+}
+
 // The line of play for a hole: the mapped path, or a straight line from the
 // tee to the center of the green.
 export function holePath(hole) {

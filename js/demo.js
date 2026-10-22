@@ -4,7 +4,7 @@
 
 import * as loc from './location.js';
 import { currentHole } from './state.js';
-import { holePath } from './courses.js';
+import { holePath, hasGreen } from './courses.js';
 import { pointAlong, pathLength, unproject } from './geo.js';
 
 const WALK_SPEED = 25;            // meters per second of animation (sped up)
@@ -24,8 +24,10 @@ function changed() {
 }
 
 // The line the player walks. A hole with no tee mapped gets a stand-in start
-// 150 m short of the green so the demo still works.
+// 150 m short of the green so the demo still works; a hole with no green
+// (scorecard only) has none, and the player is moved by dragging on the map.
 export function demoPath(hole) {
+  if (!hasGreen(hole)) return null;
   return holePath(hole) || [unproject(hole.green.center, [0, -150]), hole.green.center];
 }
 
@@ -39,8 +41,8 @@ export function isWalking() {
 
 // Where demo mode starts the player: on the current hole's line, if any.
 export function startPoint() {
-  const hole = currentHole();
-  return hole ? pointAlong(demoPath(hole), fraction ?? 0) : null;
+  const path = demoPath(currentHole());
+  return path ? pointAlong(path, fraction ?? 0) : null;
 }
 
 export function placeAtFraction(f) {
@@ -64,10 +66,9 @@ export function resetToTee() {
 
 // Walk from where the player is on the hole to the green, then stop.
 export function walk() {
-  const hole = currentHole();
-  if (!hole || loc.snapshot().mode !== 'demo') return;
+  const path = demoPath(currentHole());
+  if (!path || loc.snapshot().mode !== 'demo') return;
   stopWalk();
-  const path = demoPath(hole);
   const from = fraction == null || fraction >= 0.999 ? 0 : fraction;
   const ms = Math.min(WALK_MAX_MS, Math.max(WALK_MIN_MS, (pathLength(path) * (1 - from) / WALK_SPEED) * 1000));
   const t0 = performance.now();

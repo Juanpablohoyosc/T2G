@@ -1,7 +1,7 @@
 // App settings and "where am I in the round" state, saved between visits.
 
 import { load, save } from './store.js';
-import { getCourse } from './courses.js';
+import { getCourse, defaultTee } from './courses.js';
 
 const saved = load('settings', {}) || {};
 
@@ -12,6 +12,7 @@ export const state = {
   keepAwake: saved.keepAwake !== false,
   courseId: typeof saved.courseId === 'string' ? saved.courseId : null,
   holeIndex: Number.isInteger(saved.holeIndex) ? saved.holeIndex : 0,
+  tees: saved.tees && typeof saved.tees === 'object' ? saved.tees : {}, // course id -> tee name
 };
 
 const listeners = new Set();
@@ -42,6 +43,19 @@ export function currentHole() {
   const course = currentCourse();
   if (!course || !course.holes.length) return null;
   return course.holes[Math.min(Math.max(state.holeIndex, 0), course.holes.length - 1)];
+}
+
+// The tee set whose yardages are shown for the current course.
+export function currentTee() {
+  const course = currentCourse();
+  if (!course?.tees?.length) return null;
+  const chosen = state.tees[course.id];
+  return course.tees.some(t => t.name === chosen) ? chosen : defaultTee(course);
+}
+
+export function setTee(name) {
+  const course = currentCourse();
+  if (course) setState({ tees: { ...state.tees, [course.id]: name } });
 }
 
 export function stepHole(dir) {

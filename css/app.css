@@ -263,6 +263,9 @@ button { font: inherit; color: inherit; }
 }
 
 .dists.stale .val { opacity: .45; }
+.dist .val.none { color: var(--muted); opacity: .5; font-weight: 600; }
+/* On the map the card sits at the bottom, so messages go to the top. */
+:root[data-tab='map'] .toast { top: calc(72px + env(safe-area-inset-top)); bottom: auto; }
 
 .dist-note {
   margin: 4px 2px 0;
@@ -715,6 +718,18 @@ button { font: inherit; color: inherit; }
 }
 .segmented button[aria-pressed='true'] { background: var(--accent); color: var(--on-accent); }
 
+.select {
+  min-height: 44px;
+  min-width: 150px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: var(--border-w) solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+}
+
 .switch {
   appearance: none;
   -webkit-appearance: none;
@@ -749,7 +764,7 @@ button { font: inherit; color: inherit; }
   position: fixed;
   left: 12px;
   right: 12px;
-  top: calc(72px + env(safe-area-inset-top));
+  bottom: calc(132px + env(safe-area-inset-bottom));
   max-width: 520px;
   margin: 0 auto;
   padding: 12px 16px;
