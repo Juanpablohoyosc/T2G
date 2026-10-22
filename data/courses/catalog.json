@@ -225,10 +225,9 @@
       36.1413013351,
       -94.143575254
     ],
-    "holes": 18,
-    "file": "oga-7f2885ca-470a-493d-a140-8ef0dadf171a.json",
-    "kind": "scorecard",
-    "scorecard": true
+    "holes": 0,
+    "file": null,
+    "kind": "location"
   },
   {
     "osm": null,
