@@ -15,8 +15,10 @@
 <body>
   <div class="app" id="app">
     <header class="topbar">
-      <button class="course-btn" id="course-btn" type="button" aria-haspopup="dialog">
+      <button class="home-btn" id="home-btn" type="button" aria-label="Home">
         <span class="brand">T2G</span>
+      </button>
+      <button class="course-btn" id="course-btn" type="button" aria-haspopup="dialog">
         <span class="course-name" id="course-name">Choose a course</span>
         <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </button>
@@ -31,6 +33,43 @@
     <div class="demo-banner" id="demo-banner" role="status" hidden>
       <strong>Demo mode</strong> · simulated position, not real GPS
     </div>
+
+    <main class="home-view" id="home-view" hidden>
+      <section class="home-hero">
+        <p class="empty-kicker">Tee to Green</p>
+        <h1>Free golf GPS</h1>
+        <p>Front, center and back of every green from your phone. No ads, no login, nothing to pay.</p>
+      </section>
+
+      <button class="continue-card" id="continue-card" type="button" hidden>
+        <span class="continue-label">Continue</span>
+        <span class="continue-course" id="continue-course"></span>
+        <span class="continue-hole" id="continue-hole"></span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+
+      <nav class="home-actions" aria-label="Start">
+        <button class="home-action primary" id="home-choose" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4l11 4-11 4"/><path d="M3 21h8"/></svg>
+          <span><strong>Choose a course</strong><small id="home-choose-sub">Saved courses and Northwest Arkansas</small></span>
+        </button>
+        <button class="home-action" id="home-near" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/></svg>
+          <span><strong>Golf courses near me</strong><small>Closest first, using your location</small></span>
+        </button>
+        <button class="home-action" id="home-map" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+          <span><strong>Open the map</strong><small>Tap any green to measure, on any course</small></span>
+        </button>
+        <label class="home-action switch-row" for="home-demo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          <span><strong>Demo mode</strong><small>Simulated player, for presenting indoors</small></span>
+          <input type="checkbox" class="switch" id="home-demo">
+        </label>
+      </nav>
+
+      <p class="fine home-credits">Course data © OpenStreetMap contributors · Scorecards: OpenGolfAPI · Imagery: Esri, USGS</p>
+    </main>
 
     <main class="gps-view" id="gps-view">
       <section class="empty" id="empty-state" hidden>

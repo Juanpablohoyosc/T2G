@@ -11,10 +11,12 @@ const $ = id => document.getElementById(id);
 let busy = false;
 let toast = () => {};
 let showOnMap = () => {};
+let showYardage = () => {};
 
-export function initCourseSheet({ showToast, showMapAt }) {
+export function initCourseSheet({ showToast, showMapAt, showYardageView }) {
   toast = showToast;
   showOnMap = showMapAt;
+  showYardage = showYardageView;
   const sheet = $('course-sheet');
 
   $('preset-list').replaceChildren(...PRESETS.map(p =>
@@ -27,6 +29,16 @@ export function initCourseSheet({ showToast, showMapAt }) {
 export function openCourseSheet() {
   renderSaved();
   $('course-sheet').showModal();
+}
+
+// Open the sheet straight into a "near me" search (from Home).
+export function openNearMe() {
+  openCourseSheet();
+  run(searchNearMe);
+}
+
+export async function catalogSize() {
+  return (await loadCatalog()).length;
 }
 
 function row(title, sub, onClick, side) {
@@ -68,6 +80,7 @@ function renderSaved() {
       forgetCachedCourse();
       setState({ courseId: c.id, holeIndex: 0 });
       $('course-sheet').close();
+      showYardage();
     }, del);
     li.classList.toggle('active', c.id === state.courseId);
     return li;
@@ -249,6 +262,7 @@ function play(course) {
   forgetCachedCourse();
   setState({ courseId: course.id, holeIndex: 0 });
   $('course-sheet').close();
+  showYardage();
   toast(describe(course));
 }
 

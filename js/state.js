@@ -13,6 +13,7 @@ export const state = {
   courseId: typeof saved.courseId === 'string' ? saved.courseId : null,
   holeIndex: Number.isInteger(saved.holeIndex) ? saved.holeIndex : 0,
   tees: saved.tees && typeof saved.tees === 'object' ? saved.tees : {}, // course id -> tee name
+  lastSeen: Number.isFinite(saved.lastSeen) ? saved.lastSeen : 0,        // when the app was last in use
 };
 
 const listeners = new Set();

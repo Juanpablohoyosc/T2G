@@ -6,7 +6,8 @@ import { setWakeLock, wakeLockSupported } from './wakelock.js';
 import * as demo from './demo.js';
 import { initDistanceView } from './views/distance.js';
 import { initMapView, showMap, hideMap, focusOn } from './views/map.js';
-import { initCourseSheet, openCourseSheet, refreshSavedCourses } from './views/courses.js';
+import { initCourseSheet, openCourseSheet, openNearMe, catalogSize, refreshSavedCourses } from './views/courses.js';
+import { initHome } from './views/home.js';
 
 const $ = id => document.getElementById(id);
 
@@ -77,12 +78,13 @@ function initSheets() {
   }
 }
 
-// Bottom tabs: the yardage screen and the satellite map.
+// Screens: Home (start menu), the yardage screen and the satellite map.
 function showTab(tab) {
   document.querySelectorAll('.tabbar [data-tab]').forEach(b => {
     if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
+  $('home-view').hidden = tab !== 'home';
   $('gps-view').hidden = tab !== 'gps';
   $('map-view').hidden = tab !== 'map';
   $('app').dataset.tab = tab;
@@ -105,7 +107,8 @@ function openSettings() {
 }
 
 initSheets();
-initCourseSheet({ showToast, showMapAt });
+initCourseSheet({ showToast, showMapAt, showYardageView: () => showTab('gps') });
+initHome({ showTab, openCourses: openCourseSheet, openNearMe, catalogSize });
 initDistanceView({ openCourses: openCourseSheet, openSettings });
 initMapView();
 document.querySelectorAll('.tabbar [data-tab]').forEach(b =>
@@ -124,8 +127,15 @@ onState(patch => {
   syncSettingsSheet();
 });
 
+// Open on Home, unless a round was going on in the last few hours: then
+// straight back to the yardages.
+const ROUND_GAP_MS = 4 * 60 * 60 * 1000;
+const noteLastSeen = () => setState({ lastSeen: Date.now() });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') noteLastSeen(); });
+window.addEventListener('pagehide', noteLastSeen);
+
 applyTheme();
 applyMode();
-showTab('gps');
+showTab(state.courseId && Date.now() - state.lastSeen < ROUND_GAP_MS ? 'gps' : 'home');
 refreshSavedCourses();
 setWakeLock(state.keepAwake);

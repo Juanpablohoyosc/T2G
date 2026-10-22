@@ -88,6 +88,19 @@ button { font: inherit; color: inherit; }
   padding: 10px 12px 6px;
 }
 
+.home-btn {
+  flex: none;
+  height: 48px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.home-btn .brand { padding: 9px 10px; font-size: 1.2rem; border-radius: 12px; }
+.app[data-tab='home'] .home-btn .brand { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent); }
+
 .course-btn {
   flex: 1;
   min-width: 0;
@@ -95,7 +108,7 @@ button { font: inherit; color: inherit; }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 12px 0 6px;
+  padding: 0 12px 0 14px;
   background: var(--surface);
   border: var(--border-w) solid var(--line);
   border-radius: var(--radius);
@@ -146,6 +159,58 @@ button { font: inherit; color: inherit; }
   text-align: center;
 }
 .demo-banner strong { text-transform: uppercase; letter-spacing: .08em; }
+
+/* ---------- home ---------- */
+.home-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 12px 8px;
+}
+.home-hero { padding: 10px 6px 2px; }
+.home-hero h1 { margin: 0 0 8px; font-family: var(--num); font-size: 2.6rem; line-height: 1; }
+.home-hero p:last-child { margin: 0; color: var(--muted); line-height: 1.45; }
+
+.continue-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 0;
+  background: var(--accent);
+  color: var(--on-accent);
+  text-align: left;
+  cursor: pointer;
+}
+.continue-card svg { grid-column: 2; grid-row: 1 / span 3; width: 28px; height: 28px; }
+.continue-label { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; opacity: .85; }
+.continue-course { font-family: var(--num); font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.continue-hole { font-weight: 600; opacity: .9; }
+
+.home-actions { display: grid; gap: 10px; }
+.home-action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 68px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  border: var(--border-w) solid var(--line);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+}
+.home-action > svg { flex: none; width: 26px; height: 26px; color: var(--muted); }
+.home-action > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.home-action strong { font-size: 1.05rem; }
+.home-action small { color: var(--muted); font-size: .85rem; }
+.home-action.primary { border-color: var(--accent); }
+.home-action.primary > svg { color: var(--accent); }
+:root[data-theme='dark'] .home-action.primary > svg { color: #e0566c; }
+.home-credits { margin-top: auto; text-align: center; }
 
 /* ---------- main GPS view ---------- */
 .gps-view {
@@ -322,7 +387,8 @@ button { font: inherit; color: inherit; }
 
 /* ---------- map view ---------- */
 .app[data-tab='map'] { height: 100dvh; min-height: 0; overflow: hidden; }
-.app[data-tab='map'] .data-source { display: none; }
+.app[data-tab='map'] .data-source,
+.app[data-tab='home'] .data-source { display: none; }
 
 .map-view {
   flex: 1;
