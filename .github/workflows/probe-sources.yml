@@ -1,0 +1,24 @@
+name: Check outside golf data sources
+
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: Space-separated URLs to fetch (empty for the default list)
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/probe-sources.mjs $URLS
+        env:
+          URLS: ${{ inputs.urls }}
