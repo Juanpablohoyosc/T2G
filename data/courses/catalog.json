@@ -7,7 +7,10 @@
       -94.2585
     ],
     "holes": 18,
-    "file": "osm-relation-3373894.json"
+    "file": "osm-relation-3373894.json",
+    "oga": "82f953db-7320-480a-8ef1-5c0f2be12298",
+    "scorecard": true,
+    "kind": "mapped"
   },
   {
     "osm": "relation/9392523",
@@ -17,7 +20,10 @@
       -94.10378
     ],
     "holes": 18,
-    "file": "osm-relation-9392523.json"
+    "file": "osm-relation-9392523.json",
+    "oga": "8c648ec5-6794-4e9a-82de-6294e7720445",
+    "scorecard": true,
+    "kind": "mapped"
   },
   {
     "osm": "relation/6677178",
@@ -27,7 +33,10 @@
       -94.19287
     ],
     "holes": 18,
-    "file": "osm-relation-6677178.json"
+    "file": "osm-relation-6677178.json",
+    "oga": "a8cd5e76-d6f8-48dc-a8f3-6f577fc3936b",
+    "scorecard": true,
+    "kind": "mapped"
   },
   {
     "osm": "relation/9382373",
@@ -37,7 +46,10 @@
       -94.19633
     ],
     "holes": 9,
-    "file": "osm-relation-9382373.json"
+    "file": "osm-relation-9382373.json",
+    "oga": "0a8a9e8d-414c-4b81-a2ce-556dedc8dae2",
+    "scorecard": true,
+    "kind": "mapped"
   },
   {
     "osm": "way/1346911937",
@@ -47,7 +59,9 @@
       -94.20084
     ],
     "holes": 9,
-    "file": "osm-way-1346911937.json"
+    "file": "osm-way-1346911937.json",
+    "oga": "c465dcbc-34d9-400d-8b2b-b8080e367cbb",
+    "kind": "mapped"
   },
   {
     "osm": "relation/9382374",
@@ -57,7 +71,9 @@
       -94.18054
     ],
     "holes": 18,
-    "file": "osm-relation-9382374.json"
+    "file": "osm-relation-9382374.json",
+    "oga": "11045799-37de-43cb-a694-9a74eee40b0e",
+    "kind": "mapped"
   },
   {
     "osm": "way/115439242",
@@ -67,7 +83,36 @@
       -94.15925
     ],
     "holes": 18,
-    "file": "osm-way-115439242.json"
+    "file": "osm-way-115439242.json",
+    "oga": "d9ddd746-1a11-4e9b-8f47-6462d5d78e38",
+    "scorecard": true,
+    "kind": "mapped"
+  },
+  {
+    "osm": null,
+    "oga": "c486c5e6-90e2-4e4a-a223-e04c2f3ee068",
+    "name": "First Tee Northwest Arkansas",
+    "center": [
+      36.2531286,
+      -94.1221916
+    ],
+    "holes": 9,
+    "file": "oga-c486c5e6-90e2-4e4a-a223-e04c2f3ee068.json",
+    "kind": "scorecard",
+    "scorecard": true
+  },
+  {
+    "osm": null,
+    "oga": "dc7c3361-d231-45a5-a49e-113ef19e8af7",
+    "name": "Golf Club At Valley View",
+    "center": [
+      36.0126881754,
+      -94.2625423061
+    ],
+    "holes": 18,
+    "file": "oga-dc7c3361-d231-45a5-a49e-113ef19e8af7.json",
+    "kind": "scorecard",
+    "scorecard": true
   },
   {
     "osm": "relation/3949168",
@@ -77,7 +122,10 @@
       -94.36816
     ],
     "holes": 18,
-    "file": "osm-relation-3949168.json"
+    "file": "osm-relation-3949168.json",
+    "oga": "215cc66e-480d-4444-8f1a-94f55a1f6856",
+    "scorecard": true,
+    "kind": "mapped"
   },
   {
     "osm": "way/251436708",
@@ -87,7 +135,10 @@
       -94.24326
     ],
     "holes": 18,
-    "file": "osm-way-251436708.json"
+    "file": "osm-way-251436708.json",
+    "oga": "8e80e021-ebad-49c6-ab7d-27a13fd7b055",
+    "scorecard": true,
+    "kind": "mapped"
   },
   {
     "osm": "way/860284480",
@@ -97,7 +148,9 @@
       -94.15911
     ],
     "holes": 9,
-    "file": "osm-way-860284480.json"
+    "file": "osm-way-860284480.json",
+    "oga": "6e9596eb-f33a-46f1-b3ed-8c309a79736f",
+    "kind": "mapped"
   },
   {
     "osm": "way/1018564696",
@@ -107,7 +160,10 @@
       -94.1492
     ],
     "holes": 18,
-    "file": "osm-way-1018564696.json"
+    "file": "osm-way-1018564696.json",
+    "oga": "7b5465ac-4e8c-4e74-85c8-6687f332991b",
+    "scorecard": true,
+    "kind": "mapped"
   },
   {
     "osm": "way/296932145",
@@ -117,7 +173,23 @@
       -94.12488
     ],
     "holes": 18,
-    "file": "osm-way-296932145.json"
+    "file": "osm-way-296932145.json",
+    "oga": "ad9aa2cc-9f7a-4045-abe2-1f4abead2445",
+    "scorecard": true,
+    "kind": "mapped"
+  },
+  {
+    "osm": null,
+    "oga": "07df3514-d327-4208-ba76-a00a96dedae8",
+    "name": "Pinnacle Country Club",
+    "center": [
+      36.2966313093,
+      -94.1993737221
+    ],
+    "holes": 18,
+    "file": "oga-07df3514-d327-4208-ba76-a00a96dedae8.json",
+    "kind": "scorecard",
+    "scorecard": true
   },
   {
     "osm": "relation/3373895",
@@ -127,7 +199,49 @@
       -94.30657
     ],
     "holes": 18,
-    "file": "osm-relation-3373895.json"
+    "file": "osm-relation-3373895.json",
+    "oga": "2cf02a93-0ecb-4a33-8fd5-069cd5455d2b",
+    "scorecard": true,
+    "kind": "mapped"
+  },
+  {
+    "osm": null,
+    "oga": "0182641d-9ff9-47e9-af80-d1acfbe30513",
+    "name": "Shadow Valley Country Club",
+    "center": [
+      36.2880702642,
+      -94.219404459
+    ],
+    "holes": 18,
+    "file": "oga-0182641d-9ff9-47e9-af80-d1acfbe30513.json",
+    "kind": "scorecard",
+    "scorecard": true
+  },
+  {
+    "osm": null,
+    "oga": "7f2885ca-470a-493d-a140-8ef0dadf171a",
+    "name": "Springdale Country Club",
+    "center": [
+      36.1413013351,
+      -94.143575254
+    ],
+    "holes": 18,
+    "file": "oga-7f2885ca-470a-493d-a140-8ef0dadf171a.json",
+    "kind": "scorecard",
+    "scorecard": true
+  },
+  {
+    "osm": null,
+    "oga": "1aff78fc-72d0-4372-a0e1-c195bda363ba",
+    "name": "Stonebridge Meadows Golf Club",
+    "center": [
+      36.0450019723,
+      -94.1131242977
+    ],
+    "holes": 18,
+    "file": "oga-1aff78fc-72d0-4372-a0e1-c195bda363ba.json",
+    "kind": "scorecard",
+    "scorecard": true
   },
   {
     "osm": "way/726595178",
@@ -137,7 +251,10 @@
       -94.24316
     ],
     "holes": 18,
-    "file": "osm-way-726595178.json"
+    "file": "osm-way-726595178.json",
+    "oga": "be38c15b-baf5-4db9-97fb-34ab4d34856a",
+    "scorecard": true,
+    "kind": "mapped"
   },
   {
     "osm": "way/251437095",
@@ -147,7 +264,9 @@
       -94.16753
     ],
     "holes": 9,
-    "file": "osm-way-251437095.json"
+    "file": "osm-way-251437095.json",
+    "oga": "1450a856-83c6-4527-8425-75a5e93b31a9",
+    "kind": "mapped"
   },
   {
     "osm": "relation/3373897",
@@ -157,7 +276,35 @@
       -94.186
     ],
     "holes": 0,
-    "file": null
+    "file": null,
+    "oga": "b8aa131c-e66d-4b39-bdb8-ff33a8e9fb92",
+    "kind": "location"
+  },
+  {
+    "osm": null,
+    "oga": "94d70434-4dd3-409e-8ba5-d7598c6a846c",
+    "name": "The Links At Fayetteville Golf Country Club",
+    "center": [
+      36.0804460967,
+      -94.2115187645
+    ],
+    "holes": 9,
+    "file": "oga-94d70434-4dd3-409e-8ba5-d7598c6a846c.json",
+    "kind": "scorecard",
+    "scorecard": true
+  },
+  {
+    "osm": null,
+    "oga": "a6ac7ec6-4abe-40b7-b89a-50f33b9b437d",
+    "name": "The Links At Lowell",
+    "center": [
+      36.2546792,
+      -94.1451387
+    ],
+    "holes": 9,
+    "file": "oga-a6ac7ec6-4abe-40b7-b89a-50f33b9b437d.json",
+    "kind": "scorecard",
+    "scorecard": true
   },
   {
     "osm": "way/223993859",
@@ -167,6 +314,21 @@
       -94.23362
     ],
     "holes": 0,
-    "file": null
+    "file": null,
+    "oga": "fe693d91-4af2-468b-8cc1-91a72298b68b",
+    "kind": "location"
+  },
+  {
+    "osm": null,
+    "oga": "1ce93390-f81b-4e5c-9ba3-731aaa1a02ab",
+    "name": "The Links At Springdale Golf Country Club",
+    "center": [
+      36.1709166839,
+      -94.1759070754
+    ],
+    "holes": 9,
+    "file": "oga-1ce93390-f81b-4e5c-9ba3-731aaa1a02ab.json",
+    "kind": "scorecard",
+    "scorecard": true
   }
 ]
