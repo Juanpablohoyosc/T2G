@@ -10,7 +10,7 @@
 // OpenGolfAPI has no green positions of its own, so hole geometry still comes
 // only from OpenStreetMap. Runs on GitHub Actions after fetch-courses.mjs.
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, readdir, unlink } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 const API = 'https://api.opengolfapi.org/api/v1';
@@ -48,13 +48,20 @@ export function bestMatch(entry, candidates, holeCount = null) {
 
 const TEE_RANGE = [40, 720];
 
-// A scorecard T2G can trust: every hole numbered 1..n once, par 3-6.
+// Real courses: 9 holes par 27-37, 18 holes par 54-74.
+const PAR_RANGE = { 9: [27, 37], 18: [54, 74] };
+
+// A scorecard T2G can trust: every hole numbered 1..n once, par 3-6, and a
+// believable total (one source card had twelve par 5s in a row).
 // Handicaps are kept only if they're a clean 1..n set; a tee's yardages only
 // if every hole has one.
 export function cleanScorecard(holes) {
   if (!Array.isArray(holes) || ![9, 18].includes(holes.length)) return null;
   const sorted = [...holes].sort((a, b) => a.number - b.number);
   if (sorted.some((h, i) => h.number !== i + 1 || !(h.par >= 3 && h.par <= 6))) return null;
+  const total = sorted.reduce((s, h) => s + h.par, 0);
+  const [lo, hi] = PAR_RANGE[sorted.length];
+  if (total < lo || total > hi) return null;
 
   const hcps = sorted.map(h => h.handicap_index);
   const hcpOk = hcps.every(n => Number.isInteger(n) && n >= 1 && n <= 18) && new Set(hcps).size === hcps.length;
@@ -238,6 +245,12 @@ async function main() {
   }
 
   for (const e of catalog) e.kind ||= e.file ? 'mapped' : 'location';
+
+  // Scorecard files from earlier runs that no longer pass.
+  const keep = new Set(catalog.map(e => e.file));
+  for (const f of await readdir(outDir)) {
+    if (f.startsWith('oga-') && !keep.has(f)) { await unlink(new URL(f, outDir)); console.log(`removed ${f}`); }
+  }
   catalog.sort((a, b) => a.name.localeCompare(b.name));
   await writeFile(new URL('catalog.json', outDir), JSON.stringify(catalog, null, 2) + '\n');
   const count = k => catalog.filter(e => e.kind === k).length;
