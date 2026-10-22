@@ -125,6 +125,31 @@ async function loadCatalog() {
   return catalog || [];
 }
 
+// Courses saved on the phone keep working offline, but they'd never pick up
+// improvements (like scorecards added later). When online, swap any saved
+// copy whose catalog file has changed for the new one, quietly.
+export async function refreshSavedCourses() {
+  const saved = listCourses();
+  if (!saved.length) return;
+  const entries = await loadCatalog();
+  let current = false;
+  for (const course of saved) {
+    const entry = entries.find(e => e.file === `${course.id}.json`);
+    if (!entry?.v || entry.v === course.catalogVersion) continue;
+    try {
+      const res = await fetch(`data/courses/${entry.file}`, { cache: 'no-cache' });
+      if (!res.ok) continue;
+      if (saveCourse({ ...(await res.json()), catalogVersion: entry.v }) && course.id === state.courseId) current = true;
+    } catch {
+      // offline: keep the saved copy
+    }
+  }
+  if (current) {
+    forgetCachedCourse();
+    setState({ courseId: state.courseId }); // redraw with the new data, same hole
+  }
+}
+
 // What a catalog course offers, for the list.
 function describeEntry(entry) {
   if (!entry.file) return 'map only: tap the green to measure';
@@ -143,7 +168,7 @@ async function openCatalogCourse(entry) {
   setMsg(`Opening ${entry.name}…`, { waiting: true });
   const res = await fetch(`data/courses/${entry.file}`, { cache: 'no-cache' });
   if (!res.ok) throw new Error(`Couldn’t open ${entry.name}. Check your connection and try again.`);
-  play(await res.json());
+  play({ ...(await res.json()), catalogVersion: entry.v });
 }
 
 async function loadPreset(preset) {

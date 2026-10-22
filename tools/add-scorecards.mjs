@@ -12,6 +12,7 @@
 
 import { readFile, writeFile, readdir, unlink } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
+import { createHash } from 'node:crypto';
 
 const API = 'https://api.opengolfapi.org/api/v1';
 const HEADERS = { 'User-Agent': 'T2G course fetcher (github.com/Juanpablohoyosc/T2G)' };
@@ -140,6 +141,16 @@ export function scorecardCourse(oga, card) {
     })),
     hazards: [],
   };
+}
+
+// A short fingerprint of each course file, so the app can tell when a course
+// it saved on the phone has newer data here and refresh its copy.
+export async function stampVersions(catalog, outDir) {
+  for (const e of catalog) {
+    if (!e.file) { delete e.v; continue; }
+    const body = await readFile(new URL(e.file, outDir));
+    e.v = createHash('sha1').update(body).digest('hex').slice(0, 10);
+  }
 }
 
 async function api(path) {
@@ -273,10 +284,11 @@ async function main() {
   for (const f of await readdir(outDir)) {
     if (f.startsWith('oga-') && !keep.has(f)) { await unlink(new URL(f, outDir)); console.log(`removed ${f}`); }
   }
+  await stampVersions(catalog, outDir);
   catalog.sort((a, b) => a.name.localeCompare(b.name));
   await writeFile(new URL('catalog.json', outDir), JSON.stringify(catalog, null, 2) + '\n');
   const count = k => catalog.filter(e => e.kind === k).length;
   console.log(`\nCatalog: ${catalog.length} courses: ${count('mapped')} mapped, ${count('scorecard')} scorecard only, ${count('location')} location only; ${catalog.filter(e => e.scorecard).length} with scorecards.`);
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();

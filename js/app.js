@@ -6,7 +6,7 @@ import { setWakeLock, wakeLockSupported } from './wakelock.js';
 import * as demo from './demo.js';
 import { initDistanceView } from './views/distance.js';
 import { initMapView, showMap, hideMap, focusOn } from './views/map.js';
-import { initCourseSheet, openCourseSheet } from './views/courses.js';
+import { initCourseSheet, openCourseSheet, refreshSavedCourses } from './views/courses.js';
 
 const $ = id => document.getElementById(id);
 
@@ -127,4 +127,5 @@ onState(patch => {
 applyTheme();
 applyMode();
 showTab('gps');
+refreshSavedCourses();
 setWakeLock(state.keepAwake);
