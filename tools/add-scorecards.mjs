@@ -91,13 +91,29 @@ export function teeList(card) {
     .sort((a, b) => b.yards - a.yards);
 }
 
+// Take a course back to what OpenStreetMap alone says, so every run starts
+// clean and a scorecard that no longer passes leaves nothing behind.
+export function stripScorecard(course) {
+  for (const hole of course.holes) {
+    if (hole.parFrom === 'scorecard') hole.par = null;
+    delete hole.parFrom;
+    delete hole.handicap;
+    delete hole.yardages;
+  }
+  delete course.tees;
+  delete course.scorecard;
+  course.attribution = course.attribution.replace(` · ${CREDIT}`, '');
+  return course;
+}
+
 // Merge a clean scorecard into an OpenStreetMap course. OpenStreetMap's par
 // wins where both have one; differences are reported.
 export function applyScorecard(course, card, ogaId) {
   const notes = [];
+  stripScorecard(course);
   for (const hole of course.holes) {
     const s = card[hole.number - 1];
-    if (hole.par == null) hole.par = s.par;
+    if (hole.par == null) { hole.par = s.par; hole.parFrom = 'scorecard'; }
     else if (hole.par !== s.par) notes.push(`hole ${hole.number}: OpenStreetMap par ${hole.par}, scorecard par ${s.par}`);
     hole.handicap = s.handicap;
     hole.yardages = s.yardages;
@@ -145,7 +161,11 @@ const normalize = c => ({
 
 async function main() {
   const outDir = new URL('../data/courses/', import.meta.url);
-  const catalog = JSON.parse(await readFile(new URL('catalog.json', outDir), 'utf8'));
+  // Start from the OpenStreetMap part of the catalog. What this script added
+  // last time is rebuilt from scratch, so running it again is always safe.
+  const catalog = JSON.parse(await readFile(new URL('catalog.json', outDir), 'utf8'))
+    .filter(e => e.osm)
+    .map(({ oga, kind, scorecard, ...e }) => (e.file?.startsWith('oga-') ? { ...e, file: null, holes: 0 } : e));
   const inRegion = c => c.lat >= REGION.south && c.lat <= REGION.north && c.lng >= REGION.west && c.lng <= REGION.east;
 
   let oga;
@@ -194,6 +214,7 @@ async function main() {
     const course = JSON.parse(await readFile(new URL(entry.file, outDir), 'utf8'));
     if (!card || card.length !== course.holes.length) {
       console.log(`  scorecard not used: ${card ? `${card.length} holes vs ${course.holes.length}` : 'missing or inconsistent'}`);
+      await writeFile(new URL(entry.file, outDir), JSON.stringify(stripScorecard(course)));
       continue;
     }
     const notes = applyScorecard(course, card, hit.id);
@@ -202,7 +223,8 @@ async function main() {
     console.log(`  par ${course.holes.reduce((s, h) => s + h.par, 0)}; tees ${course.tees.map(t => `${t.name} ${t.yards}`).join(', ') || 'none'}; handicaps ${course.holes[0].handicap ? 'yes' : 'no'}`);
     if (course.tees.length) {
       const longest = course.tees[0].name;
-      const check = course.holes.map(h => `${h.number}:${h.yardages[longest]}/${Math.round(meters(h.tee, h.green.center) / 0.9144)}`);
+      const check = course.holes.map(h => `${h.number}:${h.yardages[longest]}/` +
+        (h.tee && h.green?.center ? Math.round(meters(h.tee, h.green.center) / 0.9144) : '?'));
       console.log(`  ${longest} card vs mapped tee-to-center: ${check.join(' ')}`);
     }
     await writeFile(new URL(entry.file, outDir), JSON.stringify(course));
